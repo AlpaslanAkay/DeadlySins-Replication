@@ -1,0 +1,920 @@
+--------------------------------------------------------------------------------------------------------
+      name:  dataprep
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/data_preparation.log
+  log type:  text
+ opened on:  23 Oct 2026, 02:50:38
+
+. 
+. use "/Users/xakaal/Dropbox/Papers/ZData/Offshore/soep_2023.dta", clear
+
+. 
+. * Savings filter variables already included in the combined SOEP file.
+. foreach v in hlc0119_v1 hlc0119_v2 hlc0120_h {
+  2.     capture confirm numeric variable `v'
+  3.     if _rc {
+  4.         di as error "Required savings variable not found: `v'"
+  5.         exit 111
+  6.     }
+  7. }
+
+. 
+. 
+. duplicates report persnr year
+
+Duplicates in terms of persnr year
+
+--------------------------------------
+   Copies | Observations       Surplus
+----------+---------------------------
+        1 |      1174812             0
+--------------------------------------
+
+. 
+. count
+  1,174,812
+
+. di as text "Main data observations before BIOPAREN merge: " r(N)
+Main data observations before BIOPAREN merge: 1174812
+
+. 
+. 
+. * ============================================================
+. * 2. Prepare BIOPAREN subset
+. * ============================================================
+. 
+. preserve
+
+. 
+.     use "/Users/xakaal/Dropbox/Data/SOEP_v40/SOEP_v40/soepdata/bioparen.dta", clear
+(SOEP-Core, v40.1 (EU Edition), doi:10.5684/soep.core.v40.1eu)
+
+. 
+.         rename pid persnr
+
+.     * Keep only variables needed from BIOPAREN.
+.     keep persnr freli mreli
+
+. 
+.     * BIOPAREN should be unique at pid level.
+.     duplicates report persnr
+
+Duplicates in terms of persnr
+
+--------------------------------------
+   Copies | Observations       Surplus
+----------+---------------------------
+        1 |       118608             0
+--------------------------------------
+
+. 
+.     * If this fails, inspect duplicates before merging.
+.     isid persnr, sort
+(data now sorted by persnr)
+
+. 
+.     tempfile bioparen_religion
+
+.     save `bioparen_religion', replace
+(file /var/folders/0x/1rdb_d_53nn0mhl1x9wq61gr0000gn/T//S_33976.000002 not found)
+file /var/folders/0x/1rdb_d_53nn0mhl1x9wq61gr0000gn/T//S_33976.000002 saved as .dta format
+
+. 
+. restore
+
+. 
+. 
+. * ============================================================
+. * 3. Merge parental religion into main data
+. * ============================================================
+. 
+. merge m:1 persnr using `bioparen_religion'
+(label pid_EN already defined)
+(label pid already defined)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                       155,549
+        from master                   155,548  (_merge==1)
+        from using                          1  (_merge==2)
+
+    Matched                         1,019,264  (_merge==3)
+    -----------------------------------------
+
+. 
+. * Merge codes:
+. * _merge == 1: observation exists only in main data
+. * _merge == 2: observation exists only in BIOPAREN
+. * _merge == 3: matched observation
+. 
+. tab _merge
+
+   Matching result from |
+                  merge |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+        Master only (1) |    155,548       13.24       13.24
+         Using only (2) |          1        0.00       13.24
+            Matched (3) |  1,019,264       86.76      100.00
+------------------------+-----------------------------------
+                  Total |  1,174,813      100.00
+
+. 
+. * Keep the main analytical panel.
+. * We keep all main-data observations and drop BIOPAREN-only records.
+. drop if _merge == 2
+(1 observation deleted)
+
+. 
+. rename _merge merge_bioparen
+
+. 
+. label var freli "Father's religion, BIOPAREN"
+
+. label var mreli "Mother's religion, BIOPAREN"
+
+. label var merge_bioparen "Merge status: main data with BIOPAREN"
+
+. keep persnr year ///
+>      corigin state psample ///
+>      age female educ ///
+>      hlc0119_v1 hlc0119_v2 hlc0120_h linc_hh linc_eq_m ///
+>      hsize nofch workh hgowner ///
+>      happy marital emp_stat curhealth nlabor e11103 ///
+>      kid01 kid24 kid57 kid810 kid1112 kid1315 kid1618 ///
+>      pli0098_h mreli freli
+
+. 
+. * ==============================================================================
+. * Initial Selection (Only German-Born)
+. * Checked with migrants: the result is the same
+. * ==============================================================================
+.         keep if corigin == 276          
+(283,464 observations deleted)
+
+. 
+. * ==============================================================================
+. * Prep of some variables
+. * ==============================================================================
+. 
+. * Saving and Consumption
+. * Only explicit no-saving answers with a skipped amount are coded zero.
+. * 1999-2014: hlc0119_v1=2 (No).
+. * 2015-2019: hlc0119_v2=2 (No).
+. gen byte no_saving_confirmed = 0
+
+. replace no_saving_confirmed = 1 if inrange(year,1999,2014) & hlc0119_v1 == 2
+(125,364 real changes made)
+
+. replace no_saving_confirmed = 1 if inrange(year,2015,2019) & hlc0119_v2 == 2
+(38,047 real changes made)
+
+. 
+. gen byte saving_source = 3
+
+. replace saving_source = 1 if hlc0120_h >= 0 & hlc0120_h < .
+(419,814 real changes made)
+
+. replace saving_source = 2 if no_saving_confirmed == 1 & ///
+>     (hlc0120_h == -2 | missing(hlc0120_h))
+(163,411 real changes made)
+
+. replace saving_source = 4 if no_saving_confirmed == 1 & ///
+>     hlc0120_h > 0 & hlc0120_h < .
+(0 real changes made)
+
+. 
+. label define savings_source_lbl 1 "Reported nonnegative savings" ///
+>     2 "Confirmed zero, amount not applicable/missing" ///
+>     3 "Unresolved missing savings" 4 "Conflicting responses", replace
+
+. label values saving_source savings_source_lbl
+
+. 
+.       g save_row = hlc0120_h
+(160,862 missing values generated)
+
+. replace save_row = . if save_row < 0
+(310,672 real changes made, 310,672 to missing)
+
+. replace save_row = 0 if saving_source == 2
+(163,411 real changes made)
+
+. replace save_row = . if saving_source == 4
+(0 real changes made)
+
+. replace save_row = 12*save_row
+(419,813 real changes made)
+
+.       g save_hh = save_row
+(308,123 missing values generated)
+
+. 
+.       g inc_hh = exp(linc_hh)
+(178,369 missing values generated)
+
+.       g cons_hh = inc_hh-save_hh
+(314,656 missing values generated)
+
+. 
+. qui g scale2 = 1 + (0.7 * (hsize - nofch - 1)) + (0.5 * nofch) //Standard OECD scale
+
+. qui g scale2_m = 1 + (0.5 * (hsize - nofch - 1)) + (0.3 * nofch) //Standard OECD scale
+
+. 
+.               g cons_eq_m = cons_hh/scale2_m
+(314,656 missing values generated)
+
+.               g save_eq_m = save_hh/scale2_m
+(314,656 missing values generated)
+
+.               g lcons_hh = log(cons_hh+1)
+(315,708 missing values generated)
+
+.               g lcons_eq_m = log(cons_eq_m+1)
+(315,708 missing values generated)
+
+.               g lsave_eq_m = log(save_eq_m+1)
+(314,656 missing values generated)
+
+. 
+. * Working hours and home ownership
+.         
+.           g lworkh = log(workh+1)
+(245,279 missing values generated)
+
+.               g ownerh = hgowner
+(160,862 missing values generated)
+
+.         replace ownerh  =. if ownerh<0
+(149 real changes made, 149 to missing)
+
+.               g owner = (ownerh == 1 & ownerh != .)
+
+.                   
+.                   
+. 
+. * ==============================================================================
+. * Delete Duplicates
+. * ==============================================================================
+. sort persnr year
+
+. duplicates report persnr year
+
+Duplicates in terms of persnr year
+
+--------------------------------------
+   Copies | Observations       Surplus
+----------+---------------------------
+        1 |       891348             0
+--------------------------------------
+
+. duplicates tag persnr year, gen(yedup)
+
+Duplicates in terms of persnr year
+
+. drop if yedup
+(0 observations deleted)
+
+. drop yedup
+
+. xtset persnr year
+
+Panel variable: persnr (unbalanced)
+ Time variable: year, 1984 to 2023, but with gaps
+         Delta: 1 unit
+
+. 
+. drop if happy == .
+(245,592 observations deleted)
+
+. rename persnr pid
+
+. 
+. * Saving data and calculated consumption by year
+. di as text "Saving filter, 1999-2014: v1 (1=Yes, 2=No)"
+Saving filter, 1999-2014: v1 (1=Yes, 2=No)
+
+. tab hlc0119_v1 if inrange(year,1999,2014), missing
+
+          Sparen: Vermögen und Vorsorge |
+                            [1992-2014] |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                      [-1] keine Angabe |      3,930        1.21        1.21
+                                 [1] Ja |    208,605       64.24       65.45
+                               [2] Nein |    112,171       34.55      100.00
+----------------------------------------+-----------------------------------
+                                  Total |    324,706      100.00
+
+. di as text "Saving filter, 2015-2019: v2 (2=No saving)"
+Saving filter, 2015-2019: v2 (2=No saving)
+
+. tab hlc0119_v2 if inrange(year,2015,2019), missing
+
+               Sparen: Nein [2015-2020] |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+[-5] in Fragebogenversion nicht enthalt |         17        0.02        0.02
+                   [-2] trifft nicht zu |     73,689       68.68       68.69
+                      [-1] keine Angabe |        934        0.87       69.56
+                               [2] Nein |     32,661       30.44      100.00
+----------------------------------------+-----------------------------------
+                                  Total |    107,301      100.00
+
+. di as text "2015-2019: explicit no-saving answers by amount status"
+2015-2019: explicit no-saving answers by amount status
+
+. count if inrange(year,2015,2019) & hlc0119_v2==2
+  32,661
+
+. count if inrange(year,2015,2019) & hlc0119_v2==2 & hlc0120_h==-2
+  32,661
+
+. count if inrange(year,2015,2019) & hlc0119_v2==2 & missing(hlc0120_h)
+  0
+
+. count if inrange(year,2015,2019) & hlc0119_v2==2 & hlc0120_h>=0 & hlc0120_h<.
+  0
+
+. count if inrange(year,2015,2019) & hlc0119_v2==2 & hlc0120_h<0 & hlc0120_h!=-2
+  0
+
+. di as text "Savings classification for analysis years"
+Savings classification for analysis years
+
+. tab saving_source if inrange(year,1999,2019), missing
+
+                          saving_source |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+           Reported nonnegative savings |    269,907       62.48       62.48
+Confirmed zero, amount not applicable/m |    144,832       33.53       96.00
+             Unresolved missing savings |     17,268        4.00      100.00
+----------------------------------------+-----------------------------------
+                                  Total |    432,007      100.00
+
+. tab year saving_source if inrange(year,1999,2019), missing
+
+                      |          saving_source
+          Survey Year | Reported   Confirmed  Unresolve |     Total
+----------------------+---------------------------------+----------
+                 1999 |     7,463      3,799        437 |    11,699 
+                 2000 |    13,129      6,746      1,160 |    21,035 
+                 2001 |    12,249      5,945      1,042 |    19,236 
+                 2002 |    13,014      6,711      1,167 |    20,892 
+                 2003 |    12,173      6,568      1,046 |    19,787 
+                 2004 |    11,814      6,637        845 |    19,296 
+                 2005 |    11,571      6,085        889 |    18,545 
+                 2006 |    12,187      7,035        850 |    20,072 
+                 2007 |    11,736      6,365        820 |    18,921 
+                 2008 |    11,004      6,017        866 |    17,887 
+                 2009 |    11,420      6,512        956 |    18,888 
+                 2010 |    13,430      9,368        898 |    23,696 
+                 2011 |    14,074      8,744        679 |    23,497 
+                 2012 |    14,563      8,808        703 |    24,074 
+                 2013 |    15,143      8,893        717 |    24,753 
+                 2014 |    13,896      7,938        594 |    22,428 
+                 2015 |    13,561      7,129        678 |    21,368 
+                 2016 |    12,645      6,542        612 |    19,799 
+                 2017 |    14,773      6,945        643 |    22,361 
+                 2018 |    14,537      6,393        659 |    21,589 
+                 2019 |    15,525      5,652      1,007 |    22,184 
+----------------------+---------------------------------+----------
+                Total |   269,907    144,832     17,268 |   432,007 
+
+. 
+. di as text "Explicit no-saving response"
+Explicit no-saving response
+
+. count if no_saving_confirmed == 1 & inrange(year,1999,2019)
+  144,832
+
+. di as text "Verified zeros recovered from inapplicable/missing amount"
+Verified zeros recovered from inapplicable/missing amount
+
+. count if saving_source == 2 & inrange(year,1999,2019)
+  144,832
+
+. di as text "Conflicting no-saving response and positive amount"
+Conflicting no-saving response and positive amount
+
+. count if saving_source == 4 & inrange(year,1999,2019)
+  0
+
+. di as text "Original codes of missing saving amount for explicit no-saving responses"
+Original codes of missing saving amount for explicit no-saving responses
+
+. tab hlc0120_h if no_saving_confirmed==1 & hlc0120_h<0 & ///
+>     inrange(year,1999,2019), missing
+
+   Sparen: Betrag Vermögen und Vorsorge |
+            (Euro/Monat) [harmonisiert] |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                   [-2] trifft nicht zu |    144,832      100.00      100.00
+----------------------------------------+-----------------------------------
+                                  Total |    144,832      100.00
+
+. 
+. di as text "Annual frequency of originally reported nonnegative savings"
+Annual frequency of originally reported nonnegative savings
+
+. tab year if inrange(year,1999,2019) & saving_source == 1
+
+                            Survey Year |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                   1999 |      7,463        2.77        2.77
+                                   2000 |     13,129        4.86        7.63
+                                   2001 |     12,249        4.54       12.17
+                                   2002 |     13,014        4.82       16.99
+                                   2003 |     12,173        4.51       21.50
+                                   2004 |     11,814        4.38       25.88
+                                   2005 |     11,571        4.29       30.16
+                                   2006 |     12,187        4.52       34.68
+                                   2007 |     11,736        4.35       39.03
+                                   2008 |     11,004        4.08       43.10
+                                   2009 |     11,420        4.23       47.33
+                                   2010 |     13,430        4.98       52.31
+                                   2011 |     14,074        5.21       57.52
+                                   2012 |     14,563        5.40       62.92
+                                   2013 |     15,143        5.61       68.53
+                                   2014 |     13,896        5.15       73.68
+                                   2015 |     13,561        5.02       78.70
+                                   2016 |     12,645        4.68       83.39
+                                   2017 |     14,773        5.47       88.86
+                                   2018 |     14,537        5.39       94.25
+                                   2019 |     15,525        5.75      100.00
+----------------------------------------+-----------------------------------
+                                  Total |    269,907      100.00
+
+. di as text "Annual frequency of calculated consumption after verified zeros"
+Annual frequency of calculated consumption after verified zeros
+
+. tab year if inrange(year,1999,2019) & !missing(lcons_eq_m)
+
+                            Survey Year |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                   1999 |     11,253        2.72        2.72
+                                   2000 |     19,863        4.80        7.51
+                                   2001 |     18,179        4.39       11.90
+                                   2002 |     19,693        4.75       16.66
+                                   2003 |     18,725        4.52       21.18
+                                   2004 |     18,435        4.45       25.63
+                                   2005 |     17,631        4.26       29.88
+                                   2006 |     19,196        4.63       34.52
+                                   2007 |     18,087        4.37       38.88
+                                   2008 |     17,003        4.10       42.99
+                                   2009 |     17,906        4.32       47.31
+                                   2010 |     22,770        5.50       52.81
+                                   2011 |     22,797        5.50       58.31
+                                   2012 |     23,350        5.64       63.95
+                                   2013 |     24,014        5.80       69.75
+                                   2014 |     21,807        5.26       75.01
+                                   2015 |     20,653        4.99       80.00
+                                   2016 |     19,156        4.62       84.62
+                                   2017 |     21,672        5.23       89.86
+                                   2018 |     20,893        5.04       94.90
+                                   2019 |     21,127        5.10      100.00
+----------------------------------------+-----------------------------------
+                                  Total |    414,210      100.00
+
+. 
+. /**********************************************************************
+>  Clean church attendance variable
+> 
+>  Source variable:
+>  pli0098_h = church attendance / visit of religious events [harmonized]
+> 
+>  Original coding:
+>  1 = Daily
+>  2 = At least once per week
+>  3 = At least once per month
+>  4 = Less often
+>  5 = Never
+> 
+> **********************************************************************/
+. 
+. capture drop attend4 attend_cat high_attend
+
+. 
+. * Four-category attendance variable, coded so that higher values mean more attendance.
+. gen byte attend4 = .
+(645,756 missing values generated)
+
+. 
+. replace attend4 = 1 if pli0098_h == 5
+(171,954 real changes made)
+
+. replace attend4 = 2 if pli0098_h == 4
+(86,650 real changes made)
+
+. replace attend4 = 3 if pli0098_h == 3
+(26,517 real changes made)
+
+. replace attend4 = 4 if inlist(pli0098_h, 1, 2)
+(24,449 real changes made)
+
+. 
+. label define attend4_lbl ///
+>     1 "Never" ///
+>     2 "Less often" ///
+>     3 "At least monthly" ///
+>     4 "At least weekly", replace
+
+. 
+. label values attend4 attend4_lbl
+
+. label var attend4 "Church attendance"
+
+. 
+. * Same variable with a more explicit name, useful for tables.
+. gen byte attend_cat = attend4
+(336,186 missing values generated)
+
+. label values attend_cat attend4_lbl
+
+. label var attend_cat "Church attendance category"
+
+. 
+. * Binary attendance variable for compact denomination-interaction tables.
+. gen byte high_attend = .
+(645,756 missing values generated)
+
+. replace high_attend = 0 if inlist(attend4, 1, 2)
+(258,604 real changes made)
+
+. replace high_attend = 1 if inlist(attend4, 3, 4)
+(50,966 real changes made)
+
+. 
+. label define high_attend_lbl ///
+>     0 "Never or less often" ///
+>     1 "Monthly or weekly", replace
+
+. 
+. label values high_attend high_attend_lbl
+
+. label var high_attend "High church attendance"
+
+. 
+. * Diagnostics.
+. tab pli0098_h, missing
+
+     [de] Kirchgang, Besuch religioeser |
+         Veranstaltungen [harmonisiert] |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+[-8] Question this year not part of sur |    304,972       47.23       47.23
+[-5] Not included in this version of th |     22,426        3.47       50.70
+                    [-2] Does not apply |        144        0.02       50.72
+                         [-1] No answer |      1,575        0.24       50.97
+                      [1] [de] Taeglich |        301        0.05       51.01
+              [2] [de] Min 1x pro Woche |     24,148        3.74       54.75
+              [3] [de] Min 1x pro Monat |     26,517        4.11       58.86
+                      [4] [de] Seltener |     86,650       13.42       72.28
+                           [5] [de] Nie |    171,954       26.63       98.91
+                                      . |      7,069        1.09      100.00
+----------------------------------------+-----------------------------------
+                                  Total |    645,756      100.00
+
+. tab attend4, missing
+
+          Church |
+      attendance |      Freq.     Percent        Cum.
+-----------------+-----------------------------------
+           Never |    171,954       26.63       26.63
+      Less often |     86,650       13.42       40.05
+At least monthly |     26,517        4.11       44.15
+ At least weekly |     24,449        3.79       47.94
+               . |    336,186       52.06      100.00
+-----------------+-----------------------------------
+           Total |    645,756      100.00
+
+. tab high_attend, missing
+
+        High church |
+         attendance |      Freq.     Percent        Cum.
+--------------------+-----------------------------------
+Never or less often |    258,604       40.05       40.05
+  Monthly or weekly |     50,966        7.89       47.94
+                  . |    336,186       52.06      100.00
+--------------------+-----------------------------------
+              Total |    645,756      100.00
+
+. tab year attend4 if !missing(attend4), missing
+
+                      |              Church attendance
+          Survey Year |     Never  Less ofte  At least   At least  |     Total
+----------------------+--------------------------------------------+----------
+                 1990 |     5,976      2,976        976      1,170 |    11,098 
+                 1992 |     6,101      2,797        778        979 |    10,655 
+                 1994 |     6,017      2,832        820        934 |    10,603 
+                 1995 |     6,021      2,778        851        971 |    10,621 
+                 1996 |     5,989      2,943        836        873 |    10,641 
+                 1997 |     5,887      2,962        807        872 |    10,528 
+                 1998 |     6,477      3,475      1,012      1,005 |    11,969 
+                 1999 |     6,341      3,506        903        892 |    11,642 
+                 2001 |    10,152      5,604      1,747      1,583 |    19,086 
+                 2003 |    10,343      5,947      1,745      1,637 |    19,672 
+                 2005 |     9,790      5,647      1,594      1,417 |    18,448 
+                 2007 |    10,059      5,392      1,606      1,437 |    18,494 
+                 2008 |     9,472      5,272      1,520      1,298 |    17,562 
+                 2009 |    10,173      5,365      1,577      1,458 |    18,573 
+                 2011 |    12,640      6,312      2,181      1,794 |    22,927 
+                 2013 |    12,674      6,177      2,070      1,788 |    22,709 
+                 2015 |    12,009      5,484      1,835      1,484 |    20,812 
+                 2017 |    13,004      5,425      1,900      1,483 |    21,812 
+                 2019 |    12,829      5,756      1,759      1,374 |    21,718 
+----------------------+--------------------------------------------+----------
+                Total |   171,954     86,650     26,517     24,449 |   309,570 
+
+. 
+. 
+. /**********************************************************************
+>  Clean parental religion variables from BIOPAREN
+> 
+>  freli = father's religion
+>  mreli = mother's religion
+> 
+>  Coding:
+>  1 Catholic
+>  2 Protestant
+>  3 Other Christian
+>  4 Islam
+>  5 Other religion
+>  6 No denomination
+>  Negative values are missing / not applicable.
+> **********************************************************************/
+. 
+. capture drop father_relig mother_relig ///
+>              father_cath father_prot mother_cath mother_prot ///
+>              parent_denom parent_cath parent_prot parent_mixed_cp ///
+>              parent_other parent_none
+
+. 
+. * Clean father and mother religion.
+. gen byte father_relig = .
+(645,756 missing values generated)
+
+. replace father_relig = freli if inrange(freli, 1, 6)
+(361,609 real changes made)
+
+. 
+. gen byte mother_relig = .
+(645,756 missing values generated)
+
+. replace mother_relig = mreli if inrange(mreli, 1, 6)
+(373,199 real changes made)
+
+. 
+. label define parent_relig_lbl ///
+>     1 "Catholic" ///
+>     2 "Protestant" ///
+>     3 "Other Christian" ///
+>     4 "Islam" ///
+>     5 "Other religion" ///
+>     6 "No denomination", replace
+
+. 
+. label values father_relig parent_relig_lbl
+
+. label values mother_relig parent_relig_lbl
+
+. 
+. label var father_relig "Father's religion"
+
+. label var mother_relig "Mother's religion"
+
+. 
+. * Basic parental denomination indicators.
+. gen byte father_cath = (father_relig == 1) if !missing(father_relig)
+(284,147 missing values generated)
+
+. gen byte father_prot = (father_relig == 2) if !missing(father_relig)
+(284,147 missing values generated)
+
+. 
+. gen byte mother_cath = (mother_relig == 1) if !missing(mother_relig)
+(272,557 missing values generated)
+
+. gen byte mother_prot = (mother_relig == 2) if !missing(mother_relig)
+(272,557 missing values generated)
+
+. 
+. label var father_cath "Father Catholic"
+
+. label var father_prot "Father Protestant"
+
+. label var mother_cath "Mother Catholic"
+
+. label var mother_prot "Mother Protestant"
+
+. 
+. * Combined parental denomination.
+. * 1 both Catholic
+. * 2 both Protestant
+. * 3 Catholic-Protestant mixed
+. * 4 other religious background
+. * 5 both no denomination
+. 
+. gen byte parent_denom = .
+(645,756 missing values generated)
+
+. 
+. replace parent_denom = 1 if father_relig == 1 & mother_relig == 1
+(96,338 real changes made)
+
+. replace parent_denom = 2 if father_relig == 2 & mother_relig == 2
+(122,713 real changes made)
+
+. replace parent_denom = 3 if ///
+>     (father_relig == 1 & mother_relig == 2) | ///
+>     (father_relig == 2 & mother_relig == 1)
+(37,600 real changes made)
+
+. 
+. replace parent_denom = 5 if father_relig == 6 & mother_relig == 6
+(55,688 real changes made)
+
+. 
+. replace parent_denom = 4 if missing(parent_denom) & ///
+>     !missing(father_relig, mother_relig)
+(40,914 real changes made)
+
+. 
+. label define parent_denom_lbl ///
+>     1 "Both parents Catholic" ///
+>     2 "Both parents Protestant" ///
+>     3 "Catholic-Protestant mixed parents" ///
+>     4 "Other parental religious background" ///
+>     5 "Both parents no denomination", replace
+
+. 
+. label values parent_denom parent_denom_lbl
+
+. label var parent_denom "Parental denomination"
+
+. 
+. gen byte parent_cath = (parent_denom == 1) if !missing(parent_denom)
+(292,503 missing values generated)
+
+. gen byte parent_prot = (parent_denom == 2) if !missing(parent_denom)
+(292,503 missing values generated)
+
+. gen byte parent_mixed_cp = (parent_denom == 3) if !missing(parent_denom)
+(292,503 missing values generated)
+
+. gen byte parent_other = (parent_denom == 4) if !missing(parent_denom)
+(292,503 missing values generated)
+
+. gen byte parent_none = (parent_denom == 5) if !missing(parent_denom)
+(292,503 missing values generated)
+
+. 
+. label var parent_cath "Both parents Catholic"
+
+. label var parent_prot "Both parents Protestant"
+
+. label var parent_mixed_cp "Catholic-Protestant mixed parents"
+
+. label var parent_other "Other parental religious background"
+
+. label var parent_none "Both parents no denomination"
+
+. 
+. * Diagnostics.
+. tab father_relig, missing
+
+       Father's |
+       religion |      Freq.     Percent        Cum.
+----------------+-----------------------------------
+       Catholic |    120,989       18.74       18.74
+     Protestant |    148,531       23.00       41.74
+Other Christian |      7,158        1.11       42.85
+          Islam |      5,043        0.78       43.63
+ Other religion |      3,345        0.52       44.14
+No denomination |     76,543       11.85       56.00
+              . |    284,147       44.00      100.00
+----------------+-----------------------------------
+          Total |    645,756      100.00
+
+. tab mother_relig, missing
+
+       Mother's |
+       religion |      Freq.     Percent        Cum.
+----------------+-----------------------------------
+       Catholic |    126,541       19.60       19.60
+     Protestant |    164,285       25.44       45.04
+Other Christian |      7,177        1.11       46.15
+          Islam |      4,842        0.75       46.90
+ Other religion |      3,432        0.53       47.43
+No denomination |     66,922       10.36       57.79
+              . |    272,557       42.21      100.00
+----------------+-----------------------------------
+          Total |    645,756      100.00
+
+. tab parent_denom, missing
+
+              Parental denomination |      Freq.     Percent        Cum.
+------------------------------------+-----------------------------------
+              Both parents Catholic |     96,338       14.92       14.92
+            Both parents Protestant |    122,713       19.00       33.92
+  Catholic-Protestant mixed parents |     37,600        5.82       39.74
+Other parental religious background |     40,914        6.34       46.08
+       Both parents no denomination |     55,688        8.62       54.70
+                                  . |    292,503       45.30      100.00
+------------------------------------+-----------------------------------
+                              Total |    645,756      100.00
+
+. tab parent_denom attend4, missing
+
+                      |                   Church attendance
+Parental denomination |     Never  Less ofte  At least   At least           . |     Total
+----------------------+-------------------------------------------------------+----------
+Both parents Catholic |    17,060     15,918      6,182      6,909     50,269 |    96,338 
+Both parents Protesta |    30,749     20,552      5,545      2,730     63,137 |   122,713 
+Catholic-Protestant m |     9,895      5,589      1,334        734     20,048 |    37,600 
+Other parental religi |    11,679      4,220      1,142      1,730     22,143 |    40,914 
+Both parents no denom |    24,052      1,987        313        239     29,097 |    55,688 
+                    . |    78,519     38,384     12,001     12,107    151,492 |   292,503 
+----------------------+-------------------------------------------------------+----------
+                Total |   171,954     86,650     26,517     24,449    336,186 |   645,756 
+
+. 
+. tab parent_denom attend4 if !missing(attend4), row col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+                      |              Church attendance
+Parental denomination |     Never  Less ofte  At least   At least  |     Total
+----------------------+--------------------------------------------+----------
+Both parents Catholic |    17,060     15,918      6,182      6,909 |    46,069 
+                      |     37.03      34.55      13.42      15.00 |    100.00 
+                      |     18.26      32.98      42.59      55.98 |     27.33 
+----------------------+--------------------------------------------+----------
+Both parents Protesta |    30,749     20,552      5,545      2,730 |    59,576 
+                      |     51.61      34.50       9.31       4.58 |    100.00 
+                      |     32.91      42.58      38.20      22.12 |     35.34 
+----------------------+--------------------------------------------+----------
+Catholic-Protestant m |     9,895      5,589      1,334        734 |    17,552 
+                      |     56.38      31.84       7.60       4.18 |    100.00 
+                      |     10.59      11.58       9.19       5.95 |     10.41 
+----------------------+--------------------------------------------+----------
+Other parental religi |    11,679      4,220      1,142      1,730 |    18,771 
+                      |     62.22      22.48       6.08       9.22 |    100.00 
+                      |     12.50       8.74       7.87      14.02 |     11.14 
+----------------------+--------------------------------------------+----------
+Both parents no denom |    24,052      1,987        313        239 |    26,591 
+                      |     90.45       7.47       1.18       0.90 |    100.00 
+                      |     25.74       4.12       2.16       1.94 |     15.78 
+----------------------+--------------------------------------------+----------
+                Total |    93,435     48,266     14,516     12,342 |   168,559 
+                      |     55.43      28.63       8.61       7.32 |    100.00 
+                      |    100.00     100.00     100.00     100.00 |    100.00 
+
+. tab parent_denom high_attend if !missing(attend4), row col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+                      |      High church
+                      |      attendance
+Parental denomination | Never or   Monthly o |     Total
+----------------------+----------------------+----------
+Both parents Catholic |    32,978     13,091 |    46,069 
+                      |     71.58      28.42 |    100.00 
+                      |     23.27      48.74 |     27.33 
+----------------------+----------------------+----------
+Both parents Protesta |    51,301      8,275 |    59,576 
+                      |     86.11      13.89 |    100.00 
+                      |     36.20      30.81 |     35.34 
+----------------------+----------------------+----------
+Catholic-Protestant m |    15,484      2,068 |    17,552 
+                      |     88.22      11.78 |    100.00 
+                      |     10.93       7.70 |     10.41 
+----------------------+----------------------+----------
+Other parental religi |    15,899      2,872 |    18,771 
+                      |     84.70      15.30 |    100.00 
+                      |     11.22      10.69 |     11.14 
+----------------------+----------------------+----------
+Both parents no denom |    26,039        552 |    26,591 
+                      |     97.92       2.08 |    100.00 
+                      |     18.38       2.06 |     15.78 
+----------------------+----------------------+----------
+                Total |   141,701     26,858 |   168,559 
+                      |     84.07      15.93 |    100.00 
+                      |    100.00     100.00 |    100.00 
+
+. 
+. 
+. log close dataprep
+      name:  dataprep
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/data_preparation.log
+  log type:  text
+ closed on:  23 Oct 2026, 02:51:18
+--------------------------------------------------------------------------------------------------------

@@ -1,0 +1,1549 @@
+--------------------------------------------------------------------------------------------------------
+      name:  table1
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table1_estimation.log
+  log type:  text
+ opened on:  23 Oct 2026, 02:51:18
+
+. 
+. local min_year      1999
+
+. local max_year      2019
+
+. 
+. local age_min       20
+
+. local age_max       80
+
+. 
+. local min_ref_cell  10
+
+. 
+. drop if e11103<0
+(8,295 observations deleted)
+
+. global X "i.marital educ hsize kid01 kid24 kid57 kid810 kid1112 kid1315 kid1618 i.curhealth nlabor i.e
+> 11103 owner lworkh i.year i.state"
+
+. 
+. * Keep core SOEP samples suitable for native German analysis.
+. * Exclude migration/refugee and special-purpose samples.
+. 
+. keep if inlist(psample, 1, 3, 5, 6, 7, 8, 10, 11, 12, 13, 14)
+(73,491 observations deleted)
+
+. 
+. * ============================================================
+. * 1. Basic restrictions
+. * ============================================================
+. 
+. count
+  563,970
+
+. di as text "Initial observations: " r(N)
+Initial observations: 563970
+
+. 
+. keep if year >= `min_year'
+(128,969 observations deleted)
+
+. keep if year <= `max_year'
+(40,666 observations deleted)
+
+. drop if age < `age_min' | age > `age_max'
+(33,684 observations deleted)
+
+. 
+. sort $ID year
+
+. xtset $ID year
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+. 
+. count
+  360,651
+
+. di as text "After year and age restrictions: " r(N)
+After year and age restrictions: 360651
+
+. 
+. 
+. * ============================================================
+. * 2. Attendance and denomination variables
+. * ============================================================
+. 
+. capture drop any_attend christian_parent_sample parent_cp_sample parent_protestant
+
+. 
+. gen byte any_attend = .
+(360,651 missing values generated)
+
+. replace any_attend = 0 if attend4 == 1
+(108,408 real changes made)
+
+. replace any_attend = 1 if inlist(attend4, 2, 3, 4)
+(87,599 real changes made)
+
+. 
+. label define any_attend_lbl ///
+>     0 "Never" ///
+>     1 "Any attendance", replace
+
+. 
+. label values any_attend any_attend_lbl
+
+. label var any_attend "Any church attendance"
+
+. 
+. gen byte christian_parent_sample = .
+(360,651 missing values generated)
+
+. replace christian_parent_sample = 1 if inlist(parent_denom, 1, 2, 3)
+(169,306 real changes made)
+
+. replace christian_parent_sample = 0 if !missing(parent_denom) & !inlist(parent_denom, 1, 2, 3)
+(51,412 real changes made)
+
+. 
+. label var christian_parent_sample "Christian parental background sample"
+
+. 
+. gen byte parent_cp_sample = .
+(360,651 missing values generated)
+
+. replace parent_cp_sample = 1 if inlist(parent_denom, 1, 2)
+(146,088 real changes made)
+
+. replace parent_cp_sample = 0 if !missing(parent_denom) & !inlist(parent_denom, 1, 2)
+(74,630 real changes made)
+
+. 
+. label var parent_cp_sample "Catholic or Protestant parental background sample"
+
+. 
+. gen byte parent_protestant = .
+(360,651 missing values generated)
+
+. replace parent_protestant = 0 if parent_denom == 1
+(62,174 real changes made)
+
+. replace parent_protestant = 1 if parent_denom == 2
+(83,914 real changes made)
+
+. 
+. label define parent_protestant_lbl ///
+>     0 "Catholic parental background" ///
+>     1 "Protestant parental background", replace
+
+. 
+. label values parent_protestant parent_protestant_lbl
+
+. label var parent_protestant "Protestant parental background"
+
+. 
+. di as text " "
+ 
+
+. di as text "============================================================"
+============================================================
+
+. di as text "Religion diagnostics"
+Religion diagnostics
+
+. di as text "============================================================"
+============================================================
+
+. 
+. tab attend4, missing
+
+          Church |
+      attendance |      Freq.     Percent        Cum.
+-----------------+-----------------------------------
+           Never |    108,408       30.06       30.06
+      Less often |     55,831       15.48       45.54
+At least monthly |     17,251        4.78       50.32
+ At least weekly |     14,517        4.03       54.35
+               . |    164,644       45.65      100.00
+-----------------+-----------------------------------
+           Total |    360,651      100.00
+
+. tab any_attend, missing
+
+    Any church |
+    attendance |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+         Never |    108,408       30.06       30.06
+Any attendance |     87,599       24.29       54.35
+             . |    164,644       45.65      100.00
+---------------+-----------------------------------
+         Total |    360,651      100.00
+
+. tab parent_denom, missing
+
+              Parental denomination |      Freq.     Percent        Cum.
+------------------------------------+-----------------------------------
+              Both parents Catholic |     62,174       17.24       17.24
+            Both parents Protestant |     83,914       23.27       40.51
+  Catholic-Protestant mixed parents |     23,218        6.44       46.94
+Other parental religious background |     17,309        4.80       51.74
+       Both parents no denomination |     34,103        9.46       61.20
+                                  . |    139,933       38.80      100.00
+------------------------------------+-----------------------------------
+                              Total |    360,651      100.00
+
+. tab parent_denom any_attend if !missing(any_attend), row col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+                      | Any church attendance
+Parental denomination |     Never  Any atten |     Total
+----------------------+----------------------+----------
+Both parents Catholic |    12,580     21,523 |    34,103 
+                      |     36.89      63.11 |    100.00 
+                      |     18.74      39.47 |     28.03 
+----------------------+----------------------+----------
+Both parents Protesta |    23,815     22,245 |    46,060 
+                      |     51.70      48.30 |    100.00 
+                      |     35.48      40.79 |     37.86 
+----------------------+----------------------+----------
+Catholic-Protestant m |     7,238      5,633 |    12,871 
+                      |     56.23      43.77 |    100.00 
+                      |     10.78      10.33 |     10.58 
+----------------------+----------------------+----------
+Other parental religi |     6,285      3,317 |     9,602 
+                      |     65.46      34.54 |    100.00 
+                      |      9.36       6.08 |      7.89 
+----------------------+----------------------+----------
+Both parents no denom |    17,210      1,817 |    19,027 
+                      |     90.45       9.55 |    100.00 
+                      |     25.64       3.33 |     15.64 
+----------------------+----------------------+----------
+                Total |    67,128     54,535 |   121,663 
+                      |     55.18      44.82 |    100.00 
+                      |    100.00     100.00 |    100.00 
+
+. 
+. 
+. * ============================================================
+. * 3. Income variables
+. * ============================================================
+. 
+. capture drop labs_0 inc1
+
+. 
+. gen double labs_0 = $INCOME
+
+. gen double inc1   = exp(labs_0) if !missing(labs_0)
+
+. 
+. label var labs_0 "Log own income"
+
+. label var inc1 "Own income in levels"
+
+. 
+. 
+. * ============================================================
+. * 4. Baseline reference group
+. * ============================================================
+. 
+. foreach v in qeduc2 agefn refmiss_base rg_base {
+  2.     capture drop `v'
+  3. }
+
+. 
+. xtile qeduc2 = educ if !missing(educ), nq(2)
+
+. 
+. gen byte agefn = .
+(360,651 missing values generated)
+
+. replace agefn = 1 if age <= 30 & !missing(age)
+(53,074 real changes made)
+
+. replace agefn = 2 if age > 30  & age <= 40
+(65,674 real changes made)
+
+. replace agefn = 3 if age > 40  & age <= 50
+(81,511 real changes made)
+
+. replace agefn = 4 if age > 50  & age <= 65
+(94,450 real changes made)
+
+. replace agefn = 5 if age > 65  & !missing(age)
+(65,942 real changes made)
+
+. 
+. gen byte refmiss_base = missing(year, female, agefn, qeduc2, state)
+
+. 
+. egen long rg_base = group(year female agefn qeduc2 state) if refmiss_base == 0
+(8,277 missing values generated)
+
+. 
+. label var qeduc2  "Education group, two categories"
+
+. label var agefn   "Age group"
+
+. label var rg_base "Baseline reference group-year cell"
+
+. 
+. 
+. * ============================================================
+. * 5. Leave-one-out reference income
+. * ============================================================
+. 
+. foreach v in nref_base sum_inc_base lref_base_loo {
+  2.     capture drop `v'
+  3. }
+
+. 
+. bysort rg_base: egen long nref_base = count(inc1)
+
+. bysort rg_base: egen double sum_inc_base = total(inc1)
+
+. 
+. replace nref_base = . if missing(rg_base)
+(8,277 real changes made, 8,277 to missing)
+
+. replace sum_inc_base = . if missing(rg_base)
+(8,277 real changes made, 8,277 to missing)
+
+. 
+. gen double lref_base_loo = .
+(360,651 missing values generated)
+
+. 
+. replace lref_base_loo = log((sum_inc_base - inc1) / (nref_base - 1)) ///
+>     if nref_base > 1 & !missing(inc1) & (sum_inc_base - inc1) > 0
+(352,351 real changes made)
+
+. 
+. replace lref_base_loo = log(sum_inc_base / nref_base) ///
+>     if missing(inc1) & nref_base > 0 & sum_inc_base > 0
+(0 real changes made)
+
+. 
+. replace lref_base_loo = . if nref_base < `min_ref_cell'
+(4,907 real changes made, 4,907 to missing)
+
+. 
+. label var lref_base_loo "Log leave-one-out mean reference income"
+
+. 
+. 
+. * ============================================================
+. * 6. Samples
+. * ============================================================
+. 
+. capture drop sample_att sample_den sample_int
+
+. 
+. * Model 1: Christian parental background, including Catholic, Protestant, and mixed.
+. gen byte sample_att = !missing($Y, labs_0, lref_base_loo, any_attend, ///
+>     rg_base, christian_parent_sample)
+
+. replace sample_att = 0 if christian_parent_sample != 1
+(26,485 real changes made)
+
+. 
+. * Model 2 and Model 3: Catholic vs Protestant parental background only.
+. gen byte sample_den = !missing($Y, labs_0, lref_base_loo, parent_protestant, ///
+>     rg_base, parent_cp_sample)
+
+. replace sample_den = 0 if parent_cp_sample != 1
+(0 real changes made)
+
+. 
+. gen byte sample_int = !missing($Y, labs_0, lref_base_loo, any_attend, ///
+>     parent_protestant, rg_base, parent_cp_sample)
+
+. replace sample_int = 0 if parent_cp_sample != 1
+(0 real changes made)
+
+. 
+. di as text " "
+ 
+
+. di as text "============================================================"
+============================================================
+
+. di as text "Sample diagnostics"
+Sample diagnostics
+
+. di as text "============================================================"
+============================================================
+
+. 
+. count if sample_att == 1
+  89,241
+
+. di as text "Attendance sample before controls: " r(N)
+Attendance sample before controls: 89241
+
+. tab any_attend if sample_att == 1, missing
+
+    Any church |
+    attendance |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+         Never |     41,545       46.55       46.55
+Any attendance |     47,696       53.45      100.00
+---------------+-----------------------------------
+         Total |     89,241      100.00
+
+. tab parent_denom any_attend if sample_att == 1, row col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+                      | Any church attendance
+Parental denomination |     Never  Any atten |     Total
+----------------------+----------------------+----------
+Both parents Catholic |    11,958     20,796 |    32,754 
+                      |     36.51      63.49 |    100.00 
+                      |     28.78      43.60 |     36.70 
+----------------------+----------------------+----------
+Both parents Protesta |    22,780     21,545 |    44,325 
+                      |     51.39      48.61 |    100.00 
+                      |     54.83      45.17 |     49.67 
+----------------------+----------------------+----------
+Catholic-Protestant m |     6,807      5,355 |    12,162 
+                      |     55.97      44.03 |    100.00 
+                      |     16.38      11.23 |     13.63 
+----------------------+----------------------+----------
+                Total |    41,545     47,696 |    89,241 
+                      |     46.55      53.45 |    100.00 
+                      |    100.00     100.00 |    100.00 
+
+. 
+. count if sample_den == 1
+  140,747
+
+. di as text "Denomination sample before controls: " r(N)
+Denomination sample before controls: 140747
+
+. tab parent_protestant if sample_den == 1, missing
+
+Protestant parental background |      Freq.     Percent        Cum.
+-------------------------------+-----------------------------------
+  Catholic parental background |     59,825       42.51       42.51
+Protestant parental background |     80,922       57.49      100.00
+-------------------------------+-----------------------------------
+                         Total |    140,747      100.00
+
+. 
+. count if sample_int == 1
+  77,079
+
+. di as text "Interaction sample before controls: " r(N)
+Interaction sample before controls: 77079
+
+. tab parent_protestant any_attend if sample_int == 1, row col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+  Protestant parental | Any church attendance
+           background |     Never  Any atten |     Total
+----------------------+----------------------+----------
+Catholic parental bac |    11,958     20,796 |    32,754 
+                      |     36.51      63.49 |    100.00 
+                      |     34.42      49.12 |     42.49 
+----------------------+----------------------+----------
+Protestant parental b |    22,780     21,545 |    44,325 
+                      |     51.39      48.61 |    100.00 
+                      |     65.58      50.88 |     57.51 
+----------------------+----------------------+----------
+                Total |    34,738     42,341 |    77,079 
+                      |     45.07      54.93 |    100.00 
+                      |    100.00     100.00 |    100.00 
+
+. 
+. 
+. * ============================================================
+. * 7. Model 1 variables: never vs any attendance
+. * ============================================================
+. 
+. foreach v in own_never own_any ref_never ref_any {
+  2.     capture drop `v'
+  3. }
+
+. 
+. gen double own_never = 0 if sample_att == 1
+(271,410 missing values generated)
+
+. gen double own_any   = 0 if sample_att == 1
+(271,410 missing values generated)
+
+. 
+. gen double ref_never = 0 if sample_att == 1
+(271,410 missing values generated)
+
+. gen double ref_any   = 0 if sample_att == 1
+(271,410 missing values generated)
+
+. 
+. replace own_never = labs_0 if sample_att == 1 & any_attend == 0
+(41,538 real changes made)
+
+. replace own_any   = labs_0 if sample_att == 1 & any_attend == 1
+(47,692 real changes made)
+
+. 
+. replace ref_never = lref_base_loo if sample_att == 1 & any_attend == 0
+(41,545 real changes made)
+
+. replace ref_any   = lref_base_loo if sample_att == 1 & any_attend == 1
+(47,696 real changes made)
+
+. 
+. 
+. * ============================================================
+. * 8. Model 2 variables: average Catholic vs Protestant gradients
+. * ============================================================
+. 
+. foreach v in own_cath own_prot ref_cath ref_prot {
+  2.     capture drop `v'
+  3. }
+
+. 
+. gen double own_cath = 0 if sample_den == 1
+(219,904 missing values generated)
+
+. gen double own_prot = 0 if sample_den == 1
+(219,904 missing values generated)
+
+. 
+. gen double ref_cath = 0 if sample_den == 1
+(219,904 missing values generated)
+
+. gen double ref_prot = 0 if sample_den == 1
+(219,904 missing values generated)
+
+. 
+. replace own_cath = labs_0 if sample_den == 1 & parent_protestant == 0
+(59,817 real changes made)
+
+. replace own_prot = labs_0 if sample_den == 1 & parent_protestant == 1
+(80,910 real changes made)
+
+. 
+. replace ref_cath = lref_base_loo if sample_den == 1 & parent_protestant == 0
+(59,825 real changes made)
+
+. replace ref_prot = lref_base_loo if sample_den == 1 & parent_protestant == 1
+(80,922 real changes made)
+
+. 
+. 
+. * ============================================================
+. * 9. Model 3 variables: attendance x denomination
+. * ============================================================
+. 
+. foreach v in ///
+>     own_cath_never own_cath_any own_prot_never own_prot_any ///
+>     ref_cath_never ref_cath_any ref_prot_never ref_prot_any {
+  2.     capture drop `v'
+  3. }
+
+. 
+. gen double own_cath_never = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. gen double own_cath_any   = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. gen double own_prot_never = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. gen double own_prot_any   = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. 
+. gen double ref_cath_never = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. gen double ref_cath_any   = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. gen double ref_prot_never = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. gen double ref_prot_any   = 0 if sample_int == 1
+(283,572 missing values generated)
+
+. 
+. replace own_cath_never = labs_0 if sample_int == 1 & parent_protestant == 0 & any_attend == 0
+(11,955 real changes made)
+
+. replace own_cath_any   = labs_0 if sample_int == 1 & parent_protestant == 0 & any_attend == 1
+(20,796 real changes made)
+
+. replace own_prot_never = labs_0 if sample_int == 1 & parent_protestant == 1 & any_attend == 0
+(22,778 real changes made)
+
+. replace own_prot_any   = labs_0 if sample_int == 1 & parent_protestant == 1 & any_attend == 1
+(21,543 real changes made)
+
+. 
+. replace ref_cath_never = lref_base_loo if sample_int == 1 & parent_protestant == 0 & any_attend == 0
+(11,958 real changes made)
+
+. replace ref_cath_any   = lref_base_loo if sample_int == 1 & parent_protestant == 0 & any_attend == 1
+(20,796 real changes made)
+
+. replace ref_prot_never = lref_base_loo if sample_int == 1 & parent_protestant == 1 & any_attend == 0
+(22,780 real changes made)
+
+. replace ref_prot_any   = lref_base_loo if sample_int == 1 & parent_protestant == 1 & any_attend == 1
+(21,545 real changes made)
+
+. 
+. 
+. * ============================================================
+. * 10. Estimate models
+. * ============================================================
+. 
+. sort $ID year
+
+. xtset $ID year
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+. 
+. xtreg $Y ///
+>     c.own_never c.own_any ///
+>     c.ref_never c.ref_any ///
+>     i.any_attend ///
+>     $X ///
+>     if sample_att == 1, ///
+>     fe vce(cluster rg_base) nonest
+
+Fixed-effects (within) regression               Number of obs     =     89,135
+Group variable: pid                             Number of groups  =     18,745
+
+R-squared:                                      Obs per group:
+     Within  = 0.0924                                         min =          1
+     Between = 0.2119                                         avg =        4.8
+     Overall = 0.1777                                         max =         12
+
+                                                F(53, 3249)       =     110.22
+corr(u_i, Xb) = 0.1482                          Prob > F          =     0.0000
+
+                                (Std. err. adjusted for 3,250 clusters in rg_base)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1224489    .019452     6.29   0.000     .0843095    .1605882
+         own_any |    .048068   .0210458     2.28   0.022     .0068037    .0893324
+       ref_never |  -.1728895   .0506729    -3.41   0.001    -.2722435   -.0735355
+         ref_any |  -.0499304   .0469906    -1.06   0.288    -.1420646    .0422038
+                 |
+      any_attend |
+ Any attendance  |  -.4499733   .4118192    -1.09   0.275    -1.257425    .3574783
+                 |
+         marital |
+              2  |  -.1066921   .0289108    -3.69   0.000    -.1633772   -.0500069
+              3  |  -.2077614   .0556683    -3.73   0.000    -.3169099   -.0986129
+              4  |   .0086995   .0416739     0.21   0.835    -.0730104    .0904093
+              5  |  -.3950799   .0482028    -8.20   0.000    -.4895909   -.3005689
+                 |
+            educ |  -.0493281   .0090733    -5.44   0.000    -.0671181   -.0315381
+           hsize |   .0156998   .0093499     1.68   0.093    -.0026325    .0340322
+           kid01 |   .2596512   .0271596     9.56   0.000     .2063995    .3129029
+           kid24 |   .0117883   .0201146     0.59   0.558    -.0276504    .0512269
+           kid57 |    .007598   .0180578     0.42   0.674    -.0278078    .0430037
+          kid810 |  -.0131523   .0171404    -0.77   0.443    -.0467595    .0204548
+         kid1112 |  -.0098093   .0192006    -0.51   0.609    -.0474558    .0278373
+         kid1315 |  -.0076765    .016004    -0.48   0.632    -.0390554    .0237025
+         kid1618 |  -.0004525   .0165395    -0.03   0.978    -.0328814    .0319765
+                 |
+       curhealth |
+              2  |   1.095873   .0428423    25.58   0.000     1.011872    1.179873
+              3  |   1.653078   .0434922    38.01   0.000     1.567803    1.738353
+              4  |   2.069367   .0443024    46.71   0.000     1.982504     2.15623
+              5  |    2.35127   .0467602    50.28   0.000     2.259587    2.442952
+                 |
+          nlabor |   .0144825   .0025196     5.75   0.000     .0095423    .0194226
+                 |
+          e11103 |
+  [2] Part Time  |    .007177   .0168651     0.43   0.670    -.0258903    .0402444
+[3] Not Working  |   .0725281   .0254173     2.85   0.004     .0226925    .1223637
+                 |
+           owner |  -.0162703   .0191568    -0.85   0.396    -.0538309    .0212904
+          lworkh |   .0605581   .0070943     8.54   0.000     .0466483    .0744679
+                 |
+            year |
+           2001  |  -.0438079   .0283228    -1.55   0.122    -.0993402    .0117245
+           2003  |   -.259794   .0302674    -8.58   0.000    -.3191392   -.2004488
+           2005  |  -.2613456   .0307103    -8.51   0.000    -.3215592    -.201132
+           2007  |  -.3070494   .0319365    -9.61   0.000     -.369667   -.2444317
+           2008  |  -.3175167   .0327272    -9.70   0.000    -.3816848   -.2533486
+           2009  |  -.4193313    .032879   -12.75   0.000     -.483797   -.3548657
+           2011  |  -.3746875   .0324769   -11.54   0.000    -.4383648   -.3110103
+           2013  |   -.260761   .0332046    -7.85   0.000    -.3258651   -.1956569
+           2015  |  -.1383003   .0347956    -3.97   0.000    -.2065238   -.0700767
+           2017  |  -.2192479    .036373    -6.03   0.000    -.2905643   -.1479316
+           2019  |  -.0529966   .0399428    -1.33   0.185    -.1313122    .0253191
+                 |
+           state |
+              2  |   .0389668   .1488094     0.26   0.793    -.2528029    .3307364
+              3  |    .209301   .1582672     1.32   0.186    -.1010126    .5196147
+              4  |   .8383171   .5117776     1.64   0.102    -.1651224    1.841757
+              5  |   .1210574   .1637553     0.74   0.460    -.2000168    .4421316
+              6  |   .2057589   .1775495     1.16   0.247    -.1423613    .5538792
+              7  |  -.0409375   .1970029    -0.21   0.835       -.4272    .3453251
+              8  |  -.0015306   .1706476    -0.01   0.993    -.3361184    .3330572
+              9  |   .0473551    .169958     0.28   0.781    -.2858806    .3805907
+             10  |   .0038274   .2731718     0.01   0.989     -.531779    .5394339
+             11  |  -.1225239   .1714803    -0.71   0.475    -.4587443    .2136964
+             12  |  -.1673215   .2089791    -0.80   0.423    -.5770657    .2424227
+             13  |  -.0873572   .2252979    -0.39   0.698    -.5290975    .3543832
+             14  |   .1015927   .1895049     0.54   0.592    -.2699684    .4731538
+             15  |   .0640292   .1991966     0.32   0.748    -.3265345    .4545928
+             16  |  -.1376893   .2187745    -0.63   0.529    -.5666393    .2912607
+                 |
+           _cons |   6.559808   .5408738    12.13   0.000      5.49932    7.620296
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2692345
+         sigma_e |  1.1373661
+             rho |  .55463045   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+
+. 
+. estimates store M1
+
+. 
+. 
+. xtreg $Y ///
+>     c.own_cath c.own_prot ///
+>     c.ref_cath c.ref_prot ///
+>     i.parent_protestant ///
+>     $X ///
+>     if sample_den == 1, ///
+>     fe vce(cluster rg_base) nonest
+note: 1.parent_protestant omitted because of collinearity
+
+Fixed-effects (within) regression               Number of obs     =    140,587
+Group variable: pid                             Number of groups  =     16,748
+
+R-squared:                                      Obs per group:
+     Within  = 0.0898                                         min =          1
+     Between = 0.1777                                         avg =        8.4
+     Overall = 0.1477                                         max =         21
+
+                                                F(61, 5728)       =     141.12
+corr(u_i, Xb) = 0.0571                          Prob > F          =     0.0000
+
+                                               (Std. err. adjusted for 5,729 clusters in rg_base)
+-------------------------------------------------------------------------------------------------
+                                |               Robust
+                          happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+--------------------------------+----------------------------------------------------------------
+                       own_cath |   .1093964    .017609     6.21   0.000     .0748761    .1439168
+                       own_prot |   .1407297   .0181229     7.77   0.000     .1052019    .1762575
+                       ref_cath |  -.0667762   .0488637    -1.37   0.172    -.1625675    .0290151
+                       ref_prot |  -.0453188   .0410956    -1.10   0.270    -.1258818    .0352441
+                                |
+              parent_protestant |
+Protestant parental background  |          0  (omitted)
+                                |
+                        marital |
+                             2  |  -.1448643   .0244127    -5.93   0.000    -.1927225   -.0970061
+                             3  |  -.2685004   .0426468    -6.30   0.000    -.3521044   -.1848965
+                             4  |  -.0030325   .0330714    -0.09   0.927    -.0678649    .0617999
+                             5  |  -.3916508   .0387752   -10.10   0.000    -.4676648   -.3156368
+                                |
+                           educ |  -.0376752   .0078251    -4.81   0.000    -.0530153    -.022335
+                          hsize |   .0138438   .0077726     1.78   0.075    -.0013936    .0290811
+                          kid01 |   .2358208   .0222904    10.58   0.000     .1921233    .2795184
+                          kid24 |   .0276852   .0165365     1.67   0.094    -.0047327     .060103
+                          kid57 |   .0103094   .0146928     0.70   0.483    -.0184941    .0391128
+                         kid810 |   .0091768   .0138521     0.66   0.508    -.0179785    .0363321
+                        kid1112 |   .0215618   .0155596     1.39   0.166    -.0089409    .0520646
+                        kid1315 |    .005385   .0130177     0.41   0.679    -.0201346    .0309047
+                        kid1618 |   .0020986   .0129779     0.16   0.872     -.023343    .0275401
+                                |
+                      curhealth |
+                             2  |   1.055541   .0356723    29.59   0.000     .9856097    1.125472
+                             3  |   1.616513   .0363594    44.46   0.000     1.545234    1.687791
+                             4  |   2.023466   .0371322    54.49   0.000     1.950673     2.09626
+                             5  |   2.302425    .039165    58.79   0.000     2.225647    2.379203
+                                |
+                         nlabor |   .0127513   .0019734     6.46   0.000     .0088827    .0166199
+                                |
+                         e11103 |
+                 [2] Part Time  |   .0382661   .0132483     2.89   0.004     .0122945    .0642378
+               [3] Not Working  |   .0898827   .0195768     4.59   0.000     .0515048    .1282606
+                                |
+                          owner |   -.019644   .0156764    -1.25   0.210    -.0503756    .0110877
+                         lworkh |   .0548725   .0053384    10.28   0.000     .0444072    .0653378
+                                |
+                           year |
+                          2000  |   -.039157      .0331    -1.18   0.237    -.1040455    .0257315
+                          2001  |  -.0675755   .0323724    -2.09   0.037    -.1310377   -.0041133
+                          2002  |  -.2252714   .0332929    -6.77   0.000     -.290538   -.1600047
+                          2003  |  -.2910963     .03404    -8.55   0.000    -.3578276   -.2243651
+                          2004  |  -.4846022   .0337072   -14.38   0.000     -.550681   -.4185235
+                          2005  |  -.3106132    .034014    -9.13   0.000    -.3772934   -.2439329
+                          2006  |   -.387039   .0350692   -11.04   0.000    -.4557879   -.3182902
+                          2007  |  -.3566554     .03466   -10.29   0.000    -.4246022   -.2887086
+                          2008  |  -.3602456   .0354607   -10.16   0.000     -.429762   -.2907292
+                          2009  |  -.4561692   .0358276   -12.73   0.000    -.5264048   -.3859335
+                          2010  |  -.3109251   .0359152    -8.66   0.000    -.3813325   -.2405177
+                          2011  |  -.4185757   .0348331   -12.02   0.000    -.4868617   -.3502897
+                          2012  |    -.37472   .0352715   -10.62   0.000    -.4438656   -.3055745
+                          2013  |  -.3260779   .0352973    -9.24   0.000     -.395274   -.2568819
+                          2014  |  -.3089926   .0358799    -8.61   0.000    -.3793308   -.2386544
+                          2015  |  -.1865505   .0362771    -5.14   0.000    -.2576675   -.1154336
+                          2016  |  -.2439994    .037951    -6.43   0.000    -.3183976   -.1696011
+                          2017  |  -.2742377    .037935    -7.23   0.000    -.3486046   -.1998708
+                          2018  |    -.19206   .0395053    -4.86   0.000    -.2695053   -.1146148
+                          2019  |  -.1338365   .0400939    -3.34   0.001    -.2124357   -.0552372
+                                |
+                          state |
+                             2  |   .0520404   .1251552     0.42   0.678    -.1933111    .2973918
+                             3  |  -.0032244   .1350557    -0.02   0.981    -.2679846    .2615358
+                             4  |  -.0412664   .4393068    -0.09   0.925    -.9024738     .819941
+                             5  |   .0259837   .1351716     0.19   0.848    -.2390036    .2909711
+                             6  |   .1881358   .1427353     1.32   0.188    -.0916793     .467951
+                             7  |   .0190908   .1605364     0.12   0.905    -.2956212    .3338028
+                             8  |  -.0776207   .1429383    -0.54   0.587    -.3578339    .2025925
+                             9  |   .1735598   .1443192     1.20   0.229    -.1093605    .4564801
+                            10  |   .2151979   .2180284     0.99   0.324    -.2122203     .642616
+                            11  |  -.2841817    .140482    -2.02   0.043    -.5595796   -.0087838
+                            12  |  -.2932045   .1689669    -1.74   0.083    -.6244436    .0380346
+                            13  |  -.1582286   .1781523    -0.89   0.374    -.5074745    .1910172
+                            14  |   .1670474   .1572438     1.06   0.288      -.14121    .4753048
+                            15  |    .123095   .1868879     0.66   0.510     -.243276    .4894661
+                            16  |   .0271246   .1794446     0.15   0.880    -.3246548     .378904
+                                |
+                          _cons |   5.341607    .392035    13.63   0.000      4.57307    6.110144
+--------------------------------+----------------------------------------------------------------
+                        sigma_u |  1.2179305
+                        sigma_e |   1.138696
+                            rho |  .53358405   (fraction of variance due to u_i)
+-------------------------------------------------------------------------------------------------
+
+. 
+. estimates store M2
+
+. 
+. 
+. xtreg $Y ///
+>     c.own_cath_never c.own_cath_any ///
+>     c.own_prot_never c.own_prot_any ///
+>     c.ref_cath_never c.ref_cath_any ///
+>     c.ref_prot_never c.ref_prot_any ///
+>     i.parent_protestant##i.any_attend ///
+>     $X ///
+>     if sample_int == 1, ///
+>     fe vce(cluster rg_base) nonest
+note: 1.parent_protestant omitted because of collinearity
+
+Fixed-effects (within) regression               Number of obs     =     76,991
+Group variable: pid                             Number of groups  =     16,159
+
+R-squared:                                      Obs per group:
+     Within  = 0.0934                                         min =          1
+     Between = 0.0711                                         avg =        4.8
+     Overall = 0.0718                                         max =         12
+
+                                                F(58, 3237)       =      86.34
+corr(u_i, Xb) = -0.2769                         Prob > F          =     0.0000
+
+                                                (Std. err. adjusted for 3,238 clusters in rg_base)
+--------------------------------------------------------------------------------------------------
+                                 |               Robust
+                           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+---------------------------------+----------------------------------------------------------------
+                  own_cath_never |   .1055055   .0315908     3.34   0.001     .0435656    .1674455
+                    own_cath_any |   .0949769   .0287459     3.30   0.001     .0386149    .1513389
+                  own_prot_never |   .1839427   .0293621     6.26   0.000     .1263726    .2415128
+                    own_prot_any |   .0232797    .033881     0.69   0.492    -.0431505      .08971
+                  ref_cath_never |  -.2288456   .0851066    -2.69   0.007    -.3957139   -.0619772
+                    ref_cath_any |  -.0868134   .0688944    -1.26   0.208    -.2218945    .0482677
+                  ref_prot_never |  -.1791717   .0631216    -2.84   0.005     -.302934   -.0554094
+                    ref_prot_any |   .0150807    .059663     0.25   0.800    -.1019003    .1320618
+                                 |
+               parent_protestant |
+ Protestant parental background  |          0  (omitted)
+                                 |
+                      any_attend |
+                 Any attendance  |  -1.279748   .7478158    -1.71   0.087    -2.745988    .1864926
+                                 |
+    parent_protestant#any_attend |
+ Protestant parental background #|
+                 Any attendance  |   .9768909   .9129336     1.07   0.285    -.8130954    2.766877
+                                 |
+                         marital |
+                              2  |  -.1237245    .031584    -3.92   0.000    -.1856511   -.0617978
+                              3  |  -.2169523   .0572518    -3.79   0.000    -.3292058   -.1046989
+                              4  |   .0319792   .0450618     0.71   0.478    -.0563734    .1203318
+                              5  |  -.4218384   .0516826    -8.16   0.000    -.5231724   -.3205044
+                                 |
+                            educ |  -.0452928   .0105354    -4.30   0.000    -.0659495   -.0246361
+                           hsize |   .0110088    .009988     1.10   0.270    -.0085747    .0305922
+                           kid01 |   .2368316   .0292402     8.10   0.000     .1795004    .2941628
+                           kid24 |   .0097171   .0220791     0.44   0.660    -.0335732    .0530075
+                           kid57 |  -.0022203   .0195339    -0.11   0.910    -.0405203    .0360798
+                          kid810 |  -.0199627   .0182807    -1.09   0.275    -.0558057    .0158802
+                         kid1112 |  -.0150713   .0209202    -0.72   0.471    -.0560895     .025947
+                         kid1315 |   -.007448   .0171208    -0.44   0.664    -.0410168    .0261207
+                         kid1618 |   .0002574   .0174873     0.01   0.988    -.0340299    .0345448
+                                 |
+                       curhealth |
+                              2  |   1.078136   .0467668    23.05   0.000     .9864409    1.169832
+                              3  |   1.639845   .0478552    34.27   0.000     1.546015    1.733674
+                              4  |   2.057269   .0487586    42.19   0.000     1.961668     2.15287
+                              5  |   2.341583   .0515206    45.45   0.000     2.240567    2.442599
+                                 |
+                          nlabor |   .0156496   .0027177     5.76   0.000      .010321    .0209782
+                                 |
+                          e11103 |
+                  [2] Part Time  |   .0181603   .0183262     0.99   0.322    -.0177718    .0540924
+                [3] Not Working  |   .0704527   .0273078     2.58   0.010     .0169103    .1239951
+                                 |
+                           owner |  -.0010592   .0206872    -0.05   0.959    -.0416207    .0395022
+                          lworkh |   .0531283   .0074807     7.10   0.000     .0384609    .0677957
+                                 |
+                            year |
+                           2001  |   -.044103   .0321821    -1.37   0.171    -.1072024    .0189965
+                           2003  |  -.2598877   .0342399    -7.59   0.000    -.3270217   -.1927537
+                           2005  |  -.2743136   .0348045    -7.88   0.000    -.3425547   -.2060725
+                           2007  |  -.3191209   .0357403    -8.93   0.000    -.3891968    -.249045
+                           2008  |  -.3255341   .0365451    -8.91   0.000     -.397188   -.2538801
+                           2009  |  -.4260442   .0371088   -11.48   0.000    -.4988034    -.353285
+                           2011  |  -.3908252   .0363676   -10.75   0.000     -.462131   -.3195193
+                           2013  |  -.2890728   .0371817    -7.77   0.000    -.3619748   -.2161708
+                           2015  |  -.1493768   .0385714    -3.87   0.000    -.2250036     -.07375
+                           2017  |  -.2335797   .0407251    -5.74   0.000    -.3134292   -.1537301
+                           2019  |  -.0781233   .0437982    -1.78   0.075    -.1639983    .0077517
+                                 |
+                           state |
+                              2  |  -.0797719   .1617916    -0.49   0.622    -.3969963    .2374525
+                              3  |    .098876   .1761384     0.56   0.575     -.246478    .4442299
+                              4  |   .6855011   .5789504     1.18   0.236    -.4496454    1.820648
+                              5  |   .0845989   .1839712     0.46   0.646     -.276113    .4453108
+                              6  |   .1469193   .2019668     0.73   0.467    -.2490764    .5429151
+                              7  |  -.1428922   .2213009    -0.65   0.519    -.5767963    .2910118
+                              8  |  -.0786189   .1919219    -0.41   0.682    -.4549195    .2976818
+                              9  |   .0919157   .1898666     0.48   0.628    -.2803551    .4641866
+                             10  |  -.0613376   .2835924    -0.22   0.829    -.6173764    .4947013
+                             11  |  -.1336098   .1886767    -0.71   0.479    -.5035477     .236328
+                             12  |  -.2658876   .2237279    -1.19   0.235    -.7045503    .1727752
+                             13  |  -.1298481   .2514147    -0.52   0.606    -.6227961       .3631
+                             14  |    .118611    .211947     0.56   0.576    -.2969528    .5341749
+                             15  |   .0649146   .2331031     0.28   0.781    -.3921299    .5219591
+                             16  |   -.092556   .2403473    -0.39   0.700    -.5638042    .3786922
+                                 |
+                           _cons |   6.584085   .6003297    10.97   0.000      5.40702    7.761149
+---------------------------------+----------------------------------------------------------------
+                         sigma_u |  1.4123844
+                         sigma_e |   1.135638
+                             rho |  .60734591   (fraction of variance due to u_i)
+--------------------------------------------------------------------------------------------------
+
+. 
+. estimates store M3
+
+. 
+. 
+. * ============================================================
+. * 11. Key tests
+. * ============================================================
+. 
+. di as text " "
+ 
+
+. di as text "============================================================"
+============================================================
+
+. di as text "Model 1: Attendance"
+Model 1: Attendance
+
+. di as text "============================================================"
+============================================================
+
+. 
+. estimates restore M1
+(results M1 are active now)
+
+. test own_never = own_any
+
+ ( 1)  own_never - own_any = 0
+
+       F(  1,  3249) =   10.46
+            Prob > F =    0.0012
+
+. test ref_never = ref_any
+
+ ( 1)  ref_never - ref_any = 0
+
+       F(  1,  3249) =    7.43
+            Prob > F =    0.0065
+
+. 
+. di as text " "
+ 
+
+. di as text "============================================================"
+============================================================
+
+. di as text "Model 2: Denomination"
+Model 2: Denomination
+
+. di as text "============================================================"
+============================================================
+
+. 
+. estimates restore M2
+(results M2 are active now)
+
+. test own_cath = own_prot
+
+ ( 1)  own_cath - own_prot = 0
+
+       F(  1,  5728) =    1.66
+            Prob > F =    0.1982
+
+. test ref_cath = ref_prot
+
+ ( 1)  ref_cath - ref_prot = 0
+
+       F(  1,  5728) =    0.15
+            Prob > F =    0.6954
+
+. 
+. di as text " "
+ 
+
+. di as text "============================================================"
+============================================================
+
+. di as text "Model 3: Attendance x Denomination"
+Model 3: Attendance x Denomination
+
+. di as text "============================================================"
+============================================================
+
+. 
+. estimates restore M3
+(results M3 are active now)
+
+. 
+. test own_cath_never = own_cath_any
+
+ ( 1)  own_cath_never - own_cath_any = 0
+
+       F(  1,  3237) =    0.08
+            Prob > F =    0.7779
+
+. test ref_cath_never = ref_cath_any
+
+ ( 1)  ref_cath_never - ref_cath_any = 0
+
+       F(  1,  3237) =    3.01
+            Prob > F =    0.0827
+
+. 
+. test own_prot_never = own_prot_any
+
+ ( 1)  own_prot_never - own_prot_any = 0
+
+       F(  1,  3237) =   19.73
+            Prob > F =    0.0000
+
+. test ref_prot_never = ref_prot_any
+
+ ( 1)  ref_prot_never - ref_prot_any = 0
+
+       F(  1,  3237) =   10.08
+            Prob > F =    0.0015
+
+. 
+. test (own_cath_any - own_cath_never) = (own_prot_any - own_prot_never)
+
+ ( 1)  - own_cath_never + own_cath_any + own_prot_never - own_prot_any = 0
+
+       F(  1,  3237) =    8.04
+            Prob > F =    0.0046
+
+. test (ref_cath_any - ref_cath_never) = (ref_prot_any - ref_prot_never)
+
+ ( 1)  - ref_cath_never + ref_cath_any + ref_prot_never - ref_prot_any = 0
+
+       F(  1,  3237) =    0.27
+            Prob > F =    0.6045
+
+. 
+. 
+. * ============================================================
+. * 12. Helper programs
+. * ============================================================
+. 
+. capture program drop make_coef_from_est
+
+. program define make_coef_from_est, rclass
+  1.     version 17
+  2.     syntax, EST(name) VAR(name)
+  3. 
+.     estimates restore `est'
+  4. 
+.     tempname b se t p
+  5. 
+.     capture scalar `b' = _b[`var']
+  6.     if _rc {
+  7.         return local bcell ""
+  8.         return local secell ""
+  9.         exit
+ 10.     }
+ 11. 
+.     scalar `se' = _se[`var']
+ 12.     scalar `t'  = `b' / `se'
+ 13.     scalar `p'  = 2 * ttail(e(df_r), abs(`t'))
+ 14. 
+.     if missing(`p') {
+ 15.         scalar `p' = 2 * normal(-abs(`t'))
+ 16.     }
+ 17. 
+.     local stars ""
+ 18.     if (`p' < 0.01) {
+ 19.         local stars "***"
+ 20.     }
+ 21.     else if (`p' < 0.05) {
+ 22.         local stars "**"
+ 23.     }
+ 24.     else if (`p' < 0.10) {
+ 25.         local stars "*"
+ 26.     }
+ 27. 
+.     local bstr : display %9.3f `b'
+ 28.     local sestr : display %9.3f `se'
+ 29. 
+.     local bstr = strtrim("`bstr'")
+ 30.     local sestr = strtrim("`sestr'")
+ 31. 
+.     return local bcell "`bstr'`stars'"
+ 32.     return local secell "(`sestr')"
+ 33. end
+
+. 
+. 
+. capture program drop make_p_from_est
+
+. program define make_p_from_est, rclass
+  1.     version 17
+  2.     syntax, EST(name) TEST(string)
+  3. 
+.     estimates restore `est'
+  4. 
+.     tempname p
+  5. 
+.     capture quietly test `test'
+  6.     if _rc {
+  7.         return local pcell ""
+  8.         exit
+  9.     }
+ 10. 
+.     scalar `p' = r(p)
+ 11. 
+.     local pstr : display %9.3f `p'
+ 12.     local pstr = strtrim("`pstr'")
+ 13. 
+.     return local pcell "`pstr'"
+ 14. end
+
+. 
+. 
+. capture program drop make_stat_from_est
+
+. program define make_stat_from_est, rclass
+  1.     version 17
+  2.     syntax, EST(name) STAT(string)
+  3. 
+.     estimates restore `est'
+  4. 
+.     if "`stat'" == "N" {
+  5.         local v : display %12.0fc e(N)
+  6.     }
+  7.     else if "`stat'" == "N_g" {
+  8.         local v : display %12.0fc e(N_g)
+  9.     }
+ 10.     else if "`stat'" == "r2_w" {
+ 11.         local v : display %9.3f e(r2_w)
+ 12.     }
+ 13. 
+.     local v = strtrim("`v'")
+ 14.     return local value "`v'"
+ 15. end
+
+. 
+. 
+. capture program drop make_mrs_from_est
+
+. program define make_mrs_from_est, rclass
+  1.     version 17
+  2.     syntax, EST(name) OWN(name) REF(name)
+  3. 
+.     estimates restore `est'
+  4. 
+.     tempname m
+  5. 
+.     capture scalar `m' = -_b[`ref'] / _b[`own']
+  6.     if _rc {
+  7.         return local mcell ""
+  8.         exit
+  9.     }
+ 10. 
+.     local mstr : display %9.3f `m'
+ 11.     local mstr = strtrim("`mstr'")
+ 12. 
+.     return local mcell "`mstr'"
+ 13. end
+
+. 
+. 
+. * ============================================================
+. * 13. Collect table entries
+. * ============================================================
+. 
+. * -------------------------
+. * Model 1
+. * -------------------------
+. 
+. foreach v in own_never own_any ref_never ref_any {
+  2.     quietly make_coef_from_est, est(M1) var(`v')
+  3.     local c_`v' "`r(bcell)'"
+  4.     local s_`v' "`r(secell)'"
+  5. }
+
+. 
+. quietly make_mrs_from_est, est(M1) own(own_never) ref(ref_never)
+
+. local mrs_never "`r(mcell)'"
+
+. 
+. quietly make_mrs_from_est, est(M1) own(own_any) ref(ref_any)
+
+. local mrs_any "`r(mcell)'"
+
+. 
+. quietly make_p_from_est, est(M1) test("own_never = own_any")
+
+. local p_m1_own "`r(pcell)'"
+
+. 
+. quietly make_p_from_est, est(M1) test("ref_never = ref_any")
+
+. local p_m1_ref "`r(pcell)'"
+
+. 
+. quietly make_stat_from_est, est(M1) stat(N)
+
+. local n_m1 "`r(value)'"
+
+. 
+. quietly make_stat_from_est, est(M1) stat(N_g)
+
+. local id_m1 "`r(value)'"
+
+. 
+. quietly make_stat_from_est, est(M1) stat(r2_w)
+
+. local r2_m1 "`r(value)'"
+
+. 
+. 
+. * -------------------------
+. * Model 2
+. * -------------------------
+. 
+. foreach v in own_cath own_prot ref_cath ref_prot {
+  2.     quietly make_coef_from_est, est(M2) var(`v')
+  3.     local c_`v' "`r(bcell)'"
+  4.     local s_`v' "`r(secell)'"
+  5. }
+
+. 
+. quietly make_mrs_from_est, est(M2) own(own_cath) ref(ref_cath)
+
+. local mrs_cath "`r(mcell)'"
+
+. 
+. quietly make_mrs_from_est, est(M2) own(own_prot) ref(ref_prot)
+
+. local mrs_prot "`r(mcell)'"
+
+. 
+. quietly make_p_from_est, est(M2) test("own_cath = own_prot")
+
+. local p_m2_own "`r(pcell)'"
+
+. 
+. quietly make_p_from_est, est(M2) test("ref_cath = ref_prot")
+
+. local p_m2_ref "`r(pcell)'"
+
+. 
+. quietly make_stat_from_est, est(M2) stat(N)
+
+. local n_m2 "`r(value)'"
+
+. 
+. quietly make_stat_from_est, est(M2) stat(N_g)
+
+. local id_m2 "`r(value)'"
+
+. 
+. quietly make_stat_from_est, est(M2) stat(r2_w)
+
+. local r2_m2 "`r(value)'"
+
+. 
+. 
+. * -------------------------
+. * Model 3
+. * -------------------------
+. 
+. foreach v in ///
+>     own_cath_never own_cath_any own_prot_never own_prot_any ///
+>     ref_cath_never ref_cath_any ref_prot_never ref_prot_any {
+  2. 
+.     quietly make_coef_from_est, est(M3) var(`v')
+  3.     local c_`v' "`r(bcell)'"
+  4.     local s_`v' "`r(secell)'"
+  5. }
+
+. 
+. quietly make_mrs_from_est, est(M3) own(own_cath_never) ref(ref_cath_never)
+
+. local mrs_cath_never "`r(mcell)'"
+
+. 
+. quietly make_mrs_from_est, est(M3) own(own_cath_any) ref(ref_cath_any)
+
+. local mrs_cath_any "`r(mcell)'"
+
+. 
+. quietly make_mrs_from_est, est(M3) own(own_prot_never) ref(ref_prot_never)
+
+. local mrs_prot_never "`r(mcell)'"
+
+. 
+. quietly make_mrs_from_est, est(M3) own(own_prot_any) ref(ref_prot_any)
+
+. local mrs_prot_any "`r(mcell)'"
+
+. 
+. quietly make_p_from_est, est(M3) test("own_cath_never = own_cath_any")
+
+. local p_m3_own_cath "`r(pcell)'"
+
+. 
+. quietly make_p_from_est, est(M3) test("ref_cath_never = ref_cath_any")
+
+. local p_m3_ref_cath "`r(pcell)'"
+
+. 
+. quietly make_p_from_est, est(M3) test("own_prot_never = own_prot_any")
+
+. local p_m3_own_prot "`r(pcell)'"
+
+. 
+. quietly make_p_from_est, est(M3) test("ref_prot_never = ref_prot_any")
+
+. local p_m3_ref_prot "`r(pcell)'"
+
+. 
+. quietly make_p_from_est, est(M3) test("(own_cath_any - own_cath_never) = (own_prot_any - own_prot_neve
+> r)")
+
+. local p_m3_own_gap "`r(pcell)'"
+
+. 
+. quietly make_p_from_est, est(M3) test("(ref_cath_any - ref_cath_never) = (ref_prot_any - ref_prot_neve
+> r)")
+
+. local p_m3_ref_gap "`r(pcell)'"
+
+. 
+. quietly make_stat_from_est, est(M3) stat(N)
+
+. local n_m3 "`r(value)'"
+
+. 
+. quietly make_stat_from_est, est(M3) stat(N_g)
+
+. local id_m3 "`r(value)'"
+
+. 
+. quietly make_stat_from_est, est(M3) stat(r2_w)
+
+. local r2_m3 "`r(value)'"
+
+. 
+. 
+. * ============================================================
+. * 14. Write LaTeX table
+. * ============================================================
+. 
+. local texfile "$OUTDIR/table_income_gradients_attendance_denomination_interaction.tex"
+
+. 
+. capture file close fh
+
+. file open fh using "`texfile'", write replace
+(file /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4.
+    Results/table_income_gradients_attendance_denomination_interaction.tex not found)
+
+. 
+. file write fh "\begin{table}[!htbp]" _n
+
+. file write fh "\centering" _n
+
+. file write fh "\caption{Income Gradients by Church Attendance and Denominational Background}" _n
+
+. file write fh "\label{tab:income_gradients_attendance_denomination}" _n
+
+. file write fh "\begingroup" _n
+
+. file write fh "\scriptsize" _n
+
+. file write fh "\setlength{\tabcolsep}{5.2pt}" _n
+
+. file write fh "\renewcommand{\arraystretch}{1.14}" _n
+
+. file write fh "\begin{adjustbox}{max width=1.00\textwidth,center}" _n
+
+. file write fh "\begin{tabular}{lcccccccc}" _n
+
+. file write fh "\toprule" _n
+
+. file write fh " & \multicolumn{2}{c}{Attendance} & \multicolumn{2}{c}{Denomination} & \multicolumn{4}{
+> c}{Attendance $\times$ Denomination} \\" _n
+
+. file write fh "\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-9}" _n
+
+. file write fh " & Never & Any & Catholic & Protestant & Cath. never & Cath. any & Prot. never & Prot. 
+> any \\" _n
+
+. file write fh "\midrule" _n
+
+. 
+. file write fh "Own income & `c_own_never' & `c_own_any' & `c_own_cath' & `c_own_prot' & `c_own_cath_ne
+> ver' & `c_own_cath_any' & `c_own_prot_never' & `c_own_prot_any' \\" _n
+
+. file write fh " & `s_own_never' & `s_own_any' & `s_own_cath' & `s_own_prot' & `s_own_cath_never' & `s_
+> own_cath_any' & `s_own_prot_never' & `s_own_prot_any' \\" _n
+
+. 
+. file write fh "Reference income & `c_ref_never' & `c_ref_any' & `c_ref_cath' & `c_ref_prot' & `c_ref_c
+> ath_never' & `c_ref_cath_any' & `c_ref_prot_never' & `c_ref_prot_any' \\" _n
+
+. file write fh " & `s_ref_never' & `s_ref_any' & `s_ref_cath' & `s_ref_prot' & `s_ref_cath_never' & `s_
+> ref_cath_any' & `s_ref_prot_never' & `s_ref_prot_any' \\" _n
+
+. 
+. file write fh "MRS & `mrs_never' & `mrs_any' & `mrs_cath' & `mrs_prot' & `mrs_cath_never' & `mrs_cath_
+> any' & `mrs_prot_never' & `mrs_prot_any' \\" _n
+
+. 
+. file write fh "\addlinespace[0.25em]" _n
+
+. file write fh "\(p\)-value: own gradient equality & \multicolumn{2}{c}{`p_m1_own'} & \multicolumn{2}{c
+> }{`p_m2_own'} & \multicolumn{2}{c}{`p_m3_own_cath'} & \multicolumn{2}{c}{`p_m3_own_prot'} \\" _n
+
+. file write fh "\(p\)-value: reference gradient equality & \multicolumn{2}{c}{`p_m1_ref'} & \multicolum
+> n{2}{c}{`p_m2_ref'} & \multicolumn{2}{c}{`p_m3_ref_cath'} & \multicolumn{2}{c}{`p_m3_ref_prot'} \\" _n
+
+. file write fh "\(p\)-value: difference in attendance gaps &  &  &  &  & \multicolumn{2}{c}{Own: `p_m3_
+> own_gap'} & \multicolumn{2}{c}{Ref.: `p_m3_ref_gap'} \\" _n
+
+. 
+. file write fh "\midrule" _n
+
+. file write fh "Observations & \multicolumn{2}{c}{`n_m1'} & \multicolumn{2}{c}{`n_m2'} & \multicolumn{4
+> }{c}{`n_m3'} \\" _n
+
+. file write fh "Individuals & \multicolumn{2}{c}{`id_m1'} & \multicolumn{2}{c}{`id_m2'} & \multicolumn{
+> 4}{c}{`id_m3'} \\" _n
+
+. file write fh "Within \(R^2\) & \multicolumn{2}{c}{`r2_m1'} & \multicolumn{2}{c}{`r2_m2'} & \multicolu
+> mn{4}{c}{`r2_m3'} \\" _n
+
+. 
+. file write fh "\bottomrule" _n
+
+. file write fh "\end{tabular}" _n
+
+. file write fh "\end{adjustbox}" _n
+
+. 
+. file write fh "\vspace{0.45em}" _n
+
+. file write fh "\begin{minipage}{1.00\textwidth}" _n
+
+. file write fh "\footnotesize" _n
+
+. file write fh "\emph{Notes:} Standard errors clustered at the reference-group-year level are in parent
+> heses. " _n
+
+. file write fh "The attendance sample includes individuals with Catholic, Protestant, or Catholic-Prote
+> stant mixed parental background. " _n
+
+. file write fh "The denomination and interaction samples are restricted to individuals whose parents ar
+> e both Catholic or both Protestant. " _n
+
+. file write fh "Any attendance equals one for individuals who attend religious services less often, at 
+> least monthly, or at least weekly. " _n
+
+. file write fh "Own income is log equivalised household income. Reference income is the log leave-one-o
+> ut mean income of the reference group. " _n
+
+. file write fh "Reference groups are defined by year, gender, age group, two education groups, and fede
+> ral state. " _n
+
+. file write fh "MRS is minus the reference-income gradient divided by the own-income gradient. " _n
+
+. file write fh "All models include individual fixed effects, year fixed effects, state fixed effects, t
+> he relevant group indicators, and baseline controls. " _n
+
+. file write fh "* \(p<0.10\), ** \(p<0.05\), *** \(p<0.01\)." _n
+
+. file write fh "\end{minipage}" _n
+
+. file write fh "\endgroup" _n
+
+. file write fh "\end{table}" _n
+
+. 
+. file close fh
+
+. 
+. log close table1
+      name:  table1
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table1_estimation.log
+  log type:  text
+ closed on:  23 Oct 2026, 02:51:52
+--------------------------------------------------------------------------------------------------------

@@ -1,0 +1,682 @@
+--------------------------------------------------------------------------------------------------------
+      name:  tableA2
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/tableA2_descriptive_st
+> atistics.log
+  log type:  text
+ opened on:  23 Oct 2026, 02:53:15
+
+. 
+. local min_year      1999
+
+. local max_year      2019
+
+. 
+. local age_min       20
+
+. local age_max       80
+
+. 
+. local min_ref_cell  10
+
+. 
+. global X "i.marital educ hsize kid01 kid24 kid57 kid810 kid1112 kid1315 kid1618 i.curhealth nlabor i.e
+> 11103 owner lworkh i.year i.state"
+
+. 
+. drop if e11103 < 0
+(8,295 observations deleted)
+
+. 
+. * Keep core SOEP samples suitable for native German analysis.
+. * Exclude migration/refugee and special-purpose samples.
+. 
+. keep if inlist(psample, 1, 3, 5, 6, 7, 8, 10, 11, 12, 13, 14)
+(73,491 observations deleted)
+
+. 
+. * ============================================================
+. * 1. Basic restrictions
+. * ============================================================
+. 
+. keep if year >= `min_year'
+(128,969 observations deleted)
+
+. keep if year <= `max_year'
+(40,666 observations deleted)
+
+. drop if age < `age_min' | age > `age_max'
+(33,684 observations deleted)
+
+. 
+. sort $ID year
+
+. xtset $ID year
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+. 
+. 
+. * ============================================================
+. * 2. Attendance and Christian parental-background sample
+. * ============================================================
+. 
+. capture drop any_attend christian_parent_sample
+
+. 
+. gen byte any_attend = .
+(360,651 missing values generated)
+
+. replace any_attend = 0 if attend4 == 1
+(108,408 real changes made)
+
+. replace any_attend = 1 if inlist(attend4, 2, 3, 4)
+(87,599 real changes made)
+
+. 
+. label define any_attend_lbl ///
+>     0 "Never" ///
+>     1 "Any attendance", replace
+
+. 
+. label values any_attend any_attend_lbl
+
+. label var any_attend "Any church attendance"
+
+. 
+. gen byte christian_parent_sample = .
+(360,651 missing values generated)
+
+. replace christian_parent_sample = 1 if inlist(parent_denom, 1, 2, 3)
+(169,306 real changes made)
+
+. replace christian_parent_sample = 0 if !missing(parent_denom) & !inlist(parent_denom, 1, 2, 3)
+(51,412 real changes made)
+
+. 
+. label var christian_parent_sample "Christian parental background sample"
+
+. 
+. 
+. * ============================================================
+. * 3. Income and consumption variables
+. * ============================================================
+. 
+. capture drop labs_0 inc1 lcons_0 cons1
+
+. 
+. gen double labs_0 = $INCOME
+
+. gen double inc1   = exp(labs_0) if !missing(labs_0)
+
+. 
+. gen double lcons_0 = $CONS
+(14,551 missing values generated)
+
+. gen double cons1   = exp(lcons_0)-1 if !missing(lcons_0)
+(14,551 missing values generated)
+
+. 
+. label var labs_0  "Log own income"
+
+. label var inc1    "Own income in levels"
+
+. label var lcons_0 "Log own consumption"
+
+. label var cons1   "Own consumption in levels"
+
+. 
+. 
+. * ============================================================
+. * 4. Baseline reference group and reference income
+. * ============================================================
+. 
+. foreach v in qeduc2 agefn rg_base nref_base sum_inc_base lref_base_loo {
+  2.     capture drop `v'
+  3. }
+
+. 
+. xtile qeduc2 = educ if !missing(educ), nq(2)
+
+. 
+. gen byte agefn = .
+(360,651 missing values generated)
+
+. replace agefn = 1 if age <= 30 & !missing(age)
+(53,074 real changes made)
+
+. replace agefn = 2 if age > 30  & age <= 40
+(65,674 real changes made)
+
+. replace agefn = 3 if age > 40  & age <= 50
+(81,511 real changes made)
+
+. replace agefn = 4 if age > 50  & age <= 65
+(94,450 real changes made)
+
+. replace agefn = 5 if age > 65  & !missing(age)
+(65,942 real changes made)
+
+. 
+. egen long rg_base = group(year female agefn qeduc2 state) ///
+>     if !missing(year, female, agefn, qeduc2, state)
+(8,277 missing values generated)
+
+. 
+. bysort rg_base: egen long nref_base = count(inc1)
+
+. bysort rg_base: egen double sum_inc_base = total(inc1)
+
+. 
+. replace nref_base = . if missing(rg_base)
+(8,277 real changes made, 8,277 to missing)
+
+. replace sum_inc_base = . if missing(rg_base)
+(8,277 real changes made, 8,277 to missing)
+
+. 
+. gen double lref_base_loo = .
+(360,651 missing values generated)
+
+. 
+. replace lref_base_loo = log((sum_inc_base - inc1) / (nref_base - 1)) ///
+>     if nref_base > 1 & !missing(inc1) & (sum_inc_base - inc1) > 0
+(352,351 real changes made)
+
+. 
+. replace lref_base_loo = log(sum_inc_base / nref_base) ///
+>     if missing(inc1) & nref_base > 0 & sum_inc_base > 0
+(0 real changes made)
+
+. 
+. replace lref_base_loo = . if nref_base < `min_ref_cell'
+(4,907 real changes made, 4,907 to missing)
+
+. 
+. label var lref_base_loo "Log leave-one-out mean reference income"
+
+. 
+. 
+. * ============================================================
+. * 5. Baseline regression sample
+. * ============================================================
+. 
+. capture drop sample_candidate own_never own_any ref_never ref_any sample_desc
+
+. 
+. gen byte sample_candidate = !missing($Y, labs_0, lref_base_loo, any_attend, rg_base, christian_parent_
+> sample)
+
+. replace sample_candidate = 0 if christian_parent_sample != 1
+(26,485 real changes made)
+
+. 
+. gen double own_never = 0 if sample_candidate == 1
+(271,410 missing values generated)
+
+. gen double own_any   = 0 if sample_candidate == 1
+(271,410 missing values generated)
+
+. 
+. gen double ref_never = 0 if sample_candidate == 1
+(271,410 missing values generated)
+
+. gen double ref_any   = 0 if sample_candidate == 1
+(271,410 missing values generated)
+
+. 
+. replace own_never = labs_0 if sample_candidate == 1 & any_attend == 0
+(41,538 real changes made)
+
+. replace own_any   = labs_0 if sample_candidate == 1 & any_attend == 1
+(47,692 real changes made)
+
+. 
+. replace ref_never = lref_base_loo if sample_candidate == 1 & any_attend == 0
+(41,545 real changes made)
+
+. replace ref_any   = lref_base_loo if sample_candidate == 1 & any_attend == 1
+(47,696 real changes made)
+
+. 
+. sort $ID year
+
+. xtset $ID year
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+. 
+. xtreg $Y ///
+>     c.own_never c.own_any ///
+>     c.ref_never c.ref_any ///
+>     i.any_attend ///
+>     $X ///
+>     if sample_candidate == 1, ///
+>     fe vce(cluster rg_base) nonest
+
+Fixed-effects (within) regression               Number of obs     =     89,135
+Group variable: pid                             Number of groups  =     18,745
+
+R-squared:                                      Obs per group:
+     Within  = 0.0924                                         min =          1
+     Between = 0.2119                                         avg =        4.8
+     Overall = 0.1777                                         max =         12
+
+                                                F(53, 3249)       =     110.22
+corr(u_i, Xb) = 0.1482                          Prob > F          =     0.0000
+
+                                (Std. err. adjusted for 3,250 clusters in rg_base)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1224489    .019452     6.29   0.000     .0843095    .1605882
+         own_any |    .048068   .0210458     2.28   0.022     .0068037    .0893324
+       ref_never |  -.1728895   .0506729    -3.41   0.001    -.2722435   -.0735355
+         ref_any |  -.0499304   .0469906    -1.06   0.288    -.1420646    .0422038
+                 |
+      any_attend |
+ Any attendance  |  -.4499733   .4118192    -1.09   0.275    -1.257425    .3574783
+                 |
+         marital |
+              2  |  -.1066921   .0289108    -3.69   0.000    -.1633772   -.0500069
+              3  |  -.2077614   .0556683    -3.73   0.000    -.3169099   -.0986129
+              4  |   .0086995   .0416739     0.21   0.835    -.0730104    .0904093
+              5  |  -.3950799   .0482028    -8.20   0.000    -.4895909   -.3005689
+                 |
+            educ |  -.0493281   .0090733    -5.44   0.000    -.0671181   -.0315381
+           hsize |   .0156998   .0093499     1.68   0.093    -.0026325    .0340322
+           kid01 |   .2596512   .0271596     9.56   0.000     .2063995    .3129029
+           kid24 |   .0117883   .0201146     0.59   0.558    -.0276504    .0512269
+           kid57 |    .007598   .0180578     0.42   0.674    -.0278078    .0430037
+          kid810 |  -.0131523   .0171404    -0.77   0.443    -.0467595    .0204548
+         kid1112 |  -.0098093   .0192006    -0.51   0.609    -.0474558    .0278373
+         kid1315 |  -.0076765    .016004    -0.48   0.632    -.0390554    .0237025
+         kid1618 |  -.0004525   .0165395    -0.03   0.978    -.0328814    .0319765
+                 |
+       curhealth |
+              2  |   1.095873   .0428423    25.58   0.000     1.011872    1.179873
+              3  |   1.653078   .0434922    38.01   0.000     1.567803    1.738353
+              4  |   2.069367   .0443024    46.71   0.000     1.982504     2.15623
+              5  |    2.35127   .0467602    50.28   0.000     2.259587    2.442952
+                 |
+          nlabor |   .0144825   .0025196     5.75   0.000     .0095423    .0194226
+                 |
+          e11103 |
+  [2] Part Time  |    .007177   .0168651     0.43   0.670    -.0258903    .0402444
+[3] Not Working  |   .0725281   .0254173     2.85   0.004     .0226925    .1223637
+                 |
+           owner |  -.0162703   .0191568    -0.85   0.396    -.0538309    .0212904
+          lworkh |   .0605581   .0070943     8.54   0.000     .0466483    .0744679
+                 |
+            year |
+           2001  |  -.0438079   .0283228    -1.55   0.122    -.0993402    .0117245
+           2003  |   -.259794   .0302674    -8.58   0.000    -.3191392   -.2004488
+           2005  |  -.2613456   .0307103    -8.51   0.000    -.3215592    -.201132
+           2007  |  -.3070494   .0319365    -9.61   0.000     -.369667   -.2444317
+           2008  |  -.3175167   .0327272    -9.70   0.000    -.3816848   -.2533486
+           2009  |  -.4193313    .032879   -12.75   0.000     -.483797   -.3548657
+           2011  |  -.3746875   .0324769   -11.54   0.000    -.4383648   -.3110103
+           2013  |   -.260761   .0332046    -7.85   0.000    -.3258651   -.1956569
+           2015  |  -.1383003   .0347956    -3.97   0.000    -.2065238   -.0700767
+           2017  |  -.2192479    .036373    -6.03   0.000    -.2905643   -.1479316
+           2019  |  -.0529966   .0399428    -1.33   0.185    -.1313122    .0253191
+                 |
+           state |
+              2  |   .0389668   .1488094     0.26   0.793    -.2528029    .3307364
+              3  |    .209301   .1582672     1.32   0.186    -.1010126    .5196147
+              4  |   .8383171   .5117776     1.64   0.102    -.1651224    1.841757
+              5  |   .1210574   .1637553     0.74   0.460    -.2000168    .4421316
+              6  |   .2057589   .1775495     1.16   0.247    -.1423613    .5538792
+              7  |  -.0409375   .1970029    -0.21   0.835       -.4272    .3453251
+              8  |  -.0015306   .1706476    -0.01   0.993    -.3361184    .3330572
+              9  |   .0473551    .169958     0.28   0.781    -.2858806    .3805907
+             10  |   .0038274   .2731718     0.01   0.989     -.531779    .5394339
+             11  |  -.1225239   .1714803    -0.71   0.475    -.4587443    .2136964
+             12  |  -.1673215   .2089791    -0.80   0.423    -.5770657    .2424227
+             13  |  -.0873572   .2252979    -0.39   0.698    -.5290975    .3543832
+             14  |   .1015927   .1895049     0.54   0.592    -.2699684    .4731538
+             15  |   .0640292   .1991966     0.32   0.748    -.3265345    .4545928
+             16  |  -.1376893   .2187745    -0.63   0.529    -.5666393    .2912607
+                 |
+           _cons |   6.559808   .5408738    12.13   0.000      5.49932    7.620296
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2692345
+         sigma_e |  1.1373661
+             rho |  .55463045   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+
+. 
+. gen byte sample_desc = e(sample)
+
+. 
+. label var sample_desc "Baseline regression sample"
+
+. 
+. count if sample_desc == 1
+  89,135
+
+. di as text "Baseline regression sample observations: " r(N)
+Baseline regression sample observations: 89135
+
+. 
+. capture drop tag_sample_desc
+
+. egen tag_sample_desc = tag(pid) if sample_desc == 1
+
+. count if tag_sample_desc == 1
+  18,745
+
+. di as text "Baseline regression sample individuals: " r(N)
+Baseline regression sample individuals: 18745
+
+. capture drop tag_sample_desc
+
+. 
+. 
+. * ============================================================
+. * 6. Additional descriptive variables
+. * ============================================================
+. 
+. capture drop married employed child_sum any_child ///
+>              catholic_parent protestant_parent mixed_parent
+
+. 
+. gen byte married = .
+(360,651 missing values generated)
+
+. replace married = 1 if marital == 1
+(220,758 real changes made)
+
+. replace married = 0 if !missing(marital) & marital != 1
+(139,853 real changes made)
+
+. 
+. gen byte employed = .
+(360,651 missing values generated)
+
+. replace employed = 1 if emp_stat == 1
+(242,070 real changes made)
+
+. replace employed = 0 if !missing(emp_stat) & emp_stat != 1
+(118,581 real changes made)
+
+. 
+. egen double child_sum = rowtotal(kid01 kid24 kid57 kid810 kid1112 kid1315 kid1618), missing
+
+. 
+. gen byte any_child = .
+(360,651 missing values generated)
+
+. replace any_child = 1 if child_sum > 0 & !missing(child_sum)
+(131,884 real changes made)
+
+. replace any_child = 0 if child_sum == 0
+(228,767 real changes made)
+
+. 
+. gen byte catholic_parent = .
+(360,651 missing values generated)
+
+. replace catholic_parent = 1 if parent_denom == 1
+(62,174 real changes made)
+
+. replace catholic_parent = 0 if !missing(parent_denom) & parent_denom != 1
+(158,544 real changes made)
+
+. 
+. gen byte protestant_parent = .
+(360,651 missing values generated)
+
+. replace protestant_parent = 1 if parent_denom == 2
+(83,914 real changes made)
+
+. replace protestant_parent = 0 if !missing(parent_denom) & parent_denom != 2
+(136,804 real changes made)
+
+. 
+. gen byte mixed_parent = .
+(360,651 missing values generated)
+
+. replace mixed_parent = 1 if parent_denom == 3
+(23,218 real changes made)
+
+. replace mixed_parent = 0 if !missing(parent_denom) & parent_denom != 3
+(197,500 real changes made)
+
+. 
+. 
+. * ============================================================
+. * 7. Column conditions
+. * ============================================================
+. 
+. global G1 "sample_desc == 1"
+
+. global G2 "sample_desc == 1 & any_attend == 0"
+
+. global G3 "sample_desc == 1 & any_attend == 1"
+
+. global G4 "sample_desc == 1 & parent_denom == 1"
+
+. global G5 "sample_desc == 1 & parent_denom == 2"
+
+. global G6 "sample_desc == 1 & parent_denom == 3"
+
+. 
+. 
+. * ============================================================
+. * 8. Program to write one descriptive row
+. * ============================================================
+. 
+. capture program drop write_desc_row
+
+. program define write_desc_row
+  1.     version 17
+  2.     syntax varname, LABEL(string)
+  3. 
+.     local row "`label'"
+  4.     local serow " "
+  5. 
+.     forvalues j = 1/6 {
+  6.         local cond "${G`j'}"
+  7. 
+.         quietly summarize `varlist' if `cond'
+  8. 
+.         if r(N) > 0 {
+  9.             local mean : display %9.3f r(mean)
+ 10.             local sd   : display %9.3f r(sd)
+ 11. 
+.             local mean = strtrim("`mean'")
+ 12.             local sd   = strtrim("`sd'")
+ 13. 
+.             local row   "`row' & `mean'"
+ 14.             local serow "`serow' & (`sd')"
+ 15.         }
+ 16.         else {
+ 17.             local row   "`row' & "
+ 18.             local serow "`serow' & "
+ 19.         }
+ 20.     }
+ 21. 
+.     file write fh "`row' \\" _n
+ 22.     file write fh "`serow' \\" _n
+ 23. end
+
+. 
+. 
+. * ============================================================
+. * 9. Appendix Table A2
+. * ============================================================
+. 
+. local texfile "$OUTDIR/appendix_table_A1_descriptive_statistics.tex"
+
+. 
+. capture file close fh
+
+. file open fh using "`texfile'", write replace
+(file /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4.
+    Results/appendix_table_A1_descriptive_statistics.tex not found)
+
+. 
+. file write fh "\begin{table}[!htbp]" _n
+
+. file write fh "\centering" _n
+
+. file write fh "\caption{Descriptive Statistics}" _n
+
+. file write fh "\label{tab:appendix_descriptive_statistics}" _n
+
+. file write fh "\begingroup" _n
+
+. file write fh "\scriptsize" _n
+
+. file write fh "\setlength{\tabcolsep}{5.5pt}" _n
+
+. file write fh "\renewcommand{\arraystretch}{1.12}" _n
+
+. file write fh "\begin{adjustbox}{max width=1.00\textwidth,center}" _n
+
+. file write fh "\begin{tabular}{lcccccc}" _n
+
+. file write fh "\toprule" _n
+
+. file write fh " & (1) & (2) & (3) & (4) & (5) & (6) \\" _n
+
+. file write fh "\cmidrule(lr){2-7}" _n
+
+. file write fh " & Full sample & Never & Any attend. & Catholic & Protestant & Mixed \\" _n
+
+. file write fh "\midrule" _n
+
+. 
+. write_desc_row happy,              label("Life satisfaction")
+
+. write_desc_row labs_0,             label("Log own income")
+
+. write_desc_row lref_base_loo,      label("Log reference income")
+
+. write_desc_row lcons_0,            label("Log(1+consumption)")
+
+. write_desc_row age,                label("Age")
+
+. write_desc_row female,             label("Female")
+
+. write_desc_row educ,               label("Years of education")
+
+. write_desc_row married,            label("Married")
+
+. write_desc_row employed,           label("Employed")
+
+. write_desc_row hsize,              label("Household size")
+
+. write_desc_row any_child,          label("Children in household")
+
+. write_desc_row curhealth,          label("Self-rated health")
+
+. write_desc_row nlabor,             label("Log(1+non-labour income)")
+
+. write_desc_row owner,              label("Home owner")
+
+. write_desc_row lworkh,             label("Log working hours")
+
+. write_desc_row any_attend,         label("Any church attendance")
+
+. write_desc_row catholic_parent,    label("Both parents Catholic")
+
+. write_desc_row protestant_parent,  label("Both parents Protestant")
+
+. write_desc_row mixed_parent,       label("Catholic-Protestant mixed parents")
+
+. 
+. file write fh "\midrule" _n
+
+. 
+. local obsrow "Observations"
+
+. local idrow  "Individuals"
+
+. 
+. forvalues j = 1/6 {
+  2.     local cond "${G`j'}"
+  3. 
+.     quietly count if `cond'
+  4.     local n : display %12.0fc r(N)
+  5.     local n = strtrim("`n'")
+  6.     local obsrow "`obsrow' & `n'"
+  7. 
+.     capture drop tag_tmp
+  8.     egen tag_tmp = tag(pid) if `cond'
+  9.     quietly count if tag_tmp == 1
+ 10.     local ids : display %12.0fc r(N)
+ 11.     local ids = strtrim("`ids'")
+ 12.     local idrow "`idrow' & `ids'"
+ 13.     capture drop tag_tmp
+ 14. }
+
+. 
+. file write fh "`obsrow' \\" _n
+
+. file write fh "`idrow' \\" _n
+
+. 
+. file write fh "\bottomrule" _n
+
+. file write fh "\end{tabular}" _n
+
+. file write fh "\end{adjustbox}" _n
+
+. 
+. file write fh "\vspace{0.45em}" _n
+
+. file write fh "\begin{minipage}{1.00\textwidth}" _n
+
+. file write fh "\footnotesize" _n
+
+. file write fh "\emph{Notes:} Standard deviations are in parentheses. " _n
+
+. file write fh "The full sample is the baseline regression sample used in the main attendance analysis.
+>  " _n
+
+. file write fh "The sample is restricted to individuals aged 20--80 observed between 1999 and 2019 with
+>  Catholic, Protestant, or Catholic-Protestant mixed parental background. " _n
+
+. file write fh "Any attendance equals one for individuals who attend religious services less often, at 
+> least monthly, or at least weekly. " _n
+
+. file write fh "Reference income is the log leave-one-out mean income of the reference group, defined b
+> y year, gender, age group, two education groups, and federal state, with a minimum reference-group-yea
+> r cell size of 10. " _n
+
+. file write fh "\end{minipage}" _n
+
+. file write fh "\endgroup" _n
+
+. file write fh "\end{table}" _n
+
+. 
+. file close fh
+
+. 
+. restore
+
+. 
+. di as text "Done."
+Done.
+
+. di as text "Appendix descriptive statistics saved to:"
+Appendix descriptive statistics saved to:
+
+. di as text "`texfile'"
+/Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/appendix_table_A1_descriptive_stati
+> stics.tex
+
+. log close tableA2
+      name:  tableA2
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/tableA2_descriptive_st
+> atistics.log
+  log type:  text
+ closed on:  23 Oct 2026, 02:53:30
+--------------------------------------------------------------------------------------------------------

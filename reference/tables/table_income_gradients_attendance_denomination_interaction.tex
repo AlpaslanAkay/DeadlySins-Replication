@@ -1,0 +1,46 @@
+\begin{table}[!htbp]
+\centering
+\caption{Income Gradients by Church Attendance and Denominational Background}
+\label{tab:income_gradients_attendance_denomination}
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{5.2pt}
+\renewcommand{\arraystretch}{1.14}
+\begin{adjustbox}{max width=1.00\textwidth,center}
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{2}{c}{Attendance} & \multicolumn{2}{c}{Denomination} & \multicolumn{4}{c}{Attendance $\times$ Denomination} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-9}
+ & Never & Any & Catholic & Protestant & Cath. never & Cath. any & Prot. never & Prot. any \\
+\midrule
+Own income & 0.122*** & 0.048** & 0.109*** & 0.141*** & 0.106*** & 0.095*** & 0.184*** & 0.023 \\
+ & (0.019) & (0.021) & (0.018) & (0.018) & (0.032) & (0.029) & (0.029) & (0.034) \\
+Reference income & -0.173*** & -0.050 & -0.067 & -0.045 & -0.229*** & -0.087 & -0.179*** & 0.015 \\
+ & (0.051) & (0.047) & (0.049) & (0.041) & (0.085) & (0.069) & (0.063) & (0.060) \\
+MRS & 1.412 & 1.039 & 0.610 & 0.322 & 2.169 & 0.914 & 0.974 & -0.648 \\
+\addlinespace[0.25em]
+\(p\)-value: own gradient equality & \multicolumn{2}{c}{0.001} & \multicolumn{2}{c}{0.198} & \multicolumn{2}{c}{0.778} & \multicolumn{2}{c}{0.000} \\
+\(p\)-value: reference gradient equality & \multicolumn{2}{c}{0.006} & \multicolumn{2}{c}{0.695} & \multicolumn{2}{c}{0.083} & \multicolumn{2}{c}{0.002} \\
+\(p\)-value: difference in attendance gaps &  &  &  &  & \multicolumn{2}{c}{Own: 0.005} & \multicolumn{2}{c}{Ref.: 0.604} \\
+\midrule
+Observations & \multicolumn{2}{c}{89,135} & \multicolumn{2}{c}{140,587} & \multicolumn{4}{c}{76,991} \\
+Individuals & \multicolumn{2}{c}{18,745} & \multicolumn{2}{c}{16,748} & \multicolumn{4}{c}{16,159} \\
+Within \(R^2\) & \multicolumn{2}{c}{0.092} & \multicolumn{2}{c}{0.090} & \multicolumn{4}{c}{0.093} \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\vspace{0.45em}
+\begin{minipage}{1.00\textwidth}
+\footnotesize
+\emph{Notes:} Standard errors clustered at the reference-group-year level are in parentheses. 
+The attendance sample includes individuals with Catholic, Protestant, or Catholic-Protestant mixed parental background. 
+The denomination and interaction samples are restricted to individuals whose parents are both Catholic or both Protestant. 
+Any attendance equals one for individuals who attend religious services less often, at least monthly, or at least weekly. 
+Own income is log equivalised household income. Reference income is the log leave-one-out mean income of the reference group. 
+Reference groups are defined by year, gender, age group, two education groups, and federal state. 
+MRS is minus the reference-income gradient divided by the own-income gradient. 
+All models include individual fixed effects, year fixed effects, state fixed effects, the relevant group indicators, and baseline controls. 
+* \(p<0.10\), ** \(p<0.05\), *** \(p<0.01\).
+\end{minipage}
+\endgroup
+\end{table}

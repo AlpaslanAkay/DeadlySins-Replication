@@ -1,0 +1,40 @@
+\begin{table}[!t]
+\centering
+\caption{Robustness Checks: Church Attendance and Income Gradients}
+\label{tab:robustness_attendance_income_gradients}
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.12}
+\begin{adjustbox}{max width=1.00\textwidth,center}
+\begin{tabular}{lccccccccc}
+\toprule
+ & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) \\
+\cmidrule(lr){2-10}
+ & Base & No educ. & Married & Denom. & Median & Gini & Rank & Consumption & Cell 25 \\
+\midrule
+Own income/consumption, never & 0.122*** & 0.118*** & 0.119*** & 0.156*** & 0.123*** & 0.122*** & 0.054** & 0.072*** & 0.129*** \\
+ & (0.019) & (0.019) & (0.019) & (0.024) & (0.020) & (0.019) & (0.027) & (0.019) & (0.020) \\
+Own income/consumption, any attendance & 0.048** & 0.053** & 0.056*** & 0.059** & 0.049** & 0.048** & 0.036 & -0.001 & 0.060*** \\
+ & (0.021) & (0.021) & (0.020) & (0.024) & (0.021) & (0.021) & (0.034) & (0.021) & (0.019) \\
+\(p\)-value: never = any & 0.001 & 0.003 & 0.004 & 0.000 & 0.001 & 0.001 & 0.592 & 0.002 & 0.002 \\
+\addlinespace[0.25em]
+Reference income/position/consumption, never & -0.173*** & -0.274*** & -0.229*** & -0.160*** & -0.162*** & -0.149*** & 0.141*** & -0.154*** & -0.160*** \\
+ & (0.051) & (0.060) & (0.051) & (0.048) & (0.057) & (0.057) & (0.049) & (0.053) & (0.055) \\
+Reference income/position/consumption, any attendance & -0.050 & -0.144*** & -0.124** & 0.011 & -0.036 & -0.027 & 0.054 & -0.042 & -0.042 \\
+ & (0.047) & (0.055) & (0.049) & (0.043) & (0.053) & (0.054) & (0.053) & (0.050) & (0.051) \\
+\(p\)-value: never = any & 0.006 & 0.016 & 0.034 & 0.000 & 0.012 & 0.007 & 0.152 & 0.022 & 0.012 \\
+\midrule
+Observations & 89,135 & 89,135 & 88,437 & 64,718 & 89,135 & 89,135 & 89,135 & 84,493 & 83,598 \\
+Individuals & 18,745 & 18,745 & 18,666 & 14,340 & 18,745 & 18,745 & 18,745 & 18,376 & 17,936 \\
+Within \(R^2\) & 0.092 & 0.092 & 0.093 & 0.095 & 0.092 & 0.092 & 0.092 & 0.090 & 0.092 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\vspace{0.45em}
+\begin{minipage}{1.00\textwidth}
+\footnotesize
+\emph{Notes:} Standard errors clustered at the reference-group-year level are in parentheses. Columns (1)--(3) and (5)--(7) are estimated on the baseline attendance-sample estimation sample. Column (4) adds parental denomination to the reference-group definition within the Catholic/Protestant interaction sample and applies the minimum cell size of 10. Column (8) uses the consumption proxy and is estimated on its available sample; amounts are set to zero only for explicit no-saving responses with an inapplicable or missing amount, while other invalid values remain missing. Column (9) uses the baseline reference-group definition but requires a minimum reference-group-year cell size of 25. Any attendance equals one for individuals who attend religious services less often, at least monthly, or at least weekly. Own income is log equivalised household income, except in column (8), which uses log(1+equivalised consumption), computed from household income less reported annual savings. Reference income is the log leave-one-out mean income of the reference group, except in column (5), which uses log median reference income, column (7), which uses relative income rank, and column (8), which uses log leave-one-out mean equivalised consumption. The baseline reference group is defined by year, gender, age group, two education groups, and federal state. Column (2) removes education from the reference-group definition; column (3) replaces education with a married/non-married indicator; column (6) controls for reference-group-year inequality using the Gini coefficient. All models include individual, year, and state fixed effects and baseline controls including working hours. * \(p<0.10\), ** \(p<0.05\), *** \(p<0.01\).
+\end{minipage}
+\endgroup
+\end{table}

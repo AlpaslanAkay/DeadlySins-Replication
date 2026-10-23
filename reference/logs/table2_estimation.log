@@ -1,0 +1,2104 @@
+--------------------------------------------------------------------------------------------------------
+      name:  table2
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table2_estimation.log
+  log type:  text
+ opened on:  23 Oct 2026, 02:51:52
+
+. 
+. local min_year 1999
+
+. local max_year 2019
+
+. 
+. local age_min 20
+
+. local age_max 80
+
+. 
+. global X "i.marital educ hsize kid01 kid24 kid57 kid810 kid1112 kid1315 kid1618 i.curhealth nlabor i.e
+> 11103 owner lworkh i.year i.state"
+
+. 
+. drop if e11103 < 0
+(8,295 observations deleted)
+
+. 
+. 
+. * ============================================================
+. * 1. Sample restrictions
+. * ============================================================
+. 
+. keep if inlist(psample, 1, 3, 5, 6, 7, 8, 10, 11, 12, 13, 14)
+(73,491 observations deleted)
+
+. 
+. keep if year >= `min_year'
+(128,969 observations deleted)
+
+. keep if year <= `max_year'
+(40,666 observations deleted)
+
+. drop if age < `age_min' | age > `age_max'
+(33,684 observations deleted)
+
+. 
+. sort $ID year
+
+. xtset $ID year
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+. 
+. 
+. * ============================================================
+. * 2. Attendance and parental denomination
+. * ============================================================
+. 
+. capture drop any_attend christian_parent_sample christian_cp_sample
+
+. 
+. gen byte any_attend = .
+(360,651 missing values generated)
+
+. replace any_attend = 0 if attend4 == 1
+(108,408 real changes made)
+
+. replace any_attend = 1 if inlist(attend4, 2, 3, 4)
+(87,599 real changes made)
+
+. 
+. label define any_attend_lbl 0 "Never" 1 "Any attendance", replace
+
+. label values any_attend any_attend_lbl
+
+. label var any_attend "Any church attendance"
+
+. 
+. gen byte christian_parent_sample = .
+(360,651 missing values generated)
+
+. replace christian_parent_sample = 1 if inlist(parent_denom, 1, 2, 3)
+(169,306 real changes made)
+
+. replace christian_parent_sample = 0 if !missing(parent_denom) & !inlist(parent_denom, 1, 2, 3)
+(51,412 real changes made)
+
+. 
+. label var christian_parent_sample "Catholic, Protestant, or mixed parental background"
+
+. 
+. gen byte christian_cp_sample = .
+(360,651 missing values generated)
+
+. replace christian_cp_sample = 1 if inlist(parent_denom, 1, 2)
+(146,088 real changes made)
+
+. replace christian_cp_sample = 0 if !missing(parent_denom) & !inlist(parent_denom, 1, 2)
+(74,630 real changes made)
+
+. 
+. label var christian_cp_sample "Both Catholic or both Protestant parental background"
+
+. 
+. 
+. * ============================================================
+. * 3. Income and consumption
+. * ============================================================
+. 
+. capture drop labs_0 inc1 lcons_0 cons1
+
+. 
+. gen double labs_0 = $INCOME
+
+. gen double inc1 = exp(labs_0) if !missing(labs_0)
+
+. 
+. gen double lcons_0 = $CONS
+(14,551 missing values generated)
+
+. gen double cons1 = exp(lcons_0)-1 if !missing(lcons_0)
+(14,551 missing values generated)
+
+. 
+. label var labs_0 "Log own income"
+
+. label var inc1 "Own income in levels"
+
+. label var lcons_0 "Log own consumption"
+
+. label var cons1 "Own consumption in levels"
+
+. 
+. 
+. * ============================================================
+. * 4. Reference-group components
+. * ============================================================
+. 
+. capture drop qeduc2 agefn married2
+
+. 
+. xtile qeduc2 = educ if !missing(educ), nq(2)
+
+. label var qeduc2 "Education group, two categories"
+
+. 
+. gen byte married2 = .
+(360,651 missing values generated)
+
+. replace married2 = 1 if marital == 1
+(220,758 real changes made)
+
+. replace married2 = 0 if !missing(marital) & marital != 1
+(139,853 real changes made)
+
+. 
+. label define married2_lbl 0 "Not married" 1 "Married", replace
+
+. label values married2 married2_lbl
+
+. label var married2 "Married"
+
+. 
+. gen byte agefn = .
+(360,651 missing values generated)
+
+. replace agefn = 1 if age <= 30 & !missing(age)
+(53,074 real changes made)
+
+. replace agefn = 2 if age > 30 & age <= 40
+(65,674 real changes made)
+
+. replace agefn = 3 if age > 40 & age <= 50
+(81,511 real changes made)
+
+. replace agefn = 4 if age > 50 & age <= 65
+(94,450 real changes made)
+
+. replace agefn = 5 if age > 65 & !missing(age)
+(65,942 real changes made)
+
+. 
+. label define agefn_lbl 1 "20-30" 2 "31-40" 3 "41-50" 4 "51-65" 5 "66-80", replace
+
+. label values agefn agefn_lbl
+
+. label var agefn "Age group"
+
+. 
+. 
+. * ============================================================
+. * 5. Base analysis samples
+. * ============================================================
+. 
+. capture drop sample_income_base sample_cons_base
+
+. 
+. gen byte sample_income_base = 1
+
+. replace sample_income_base = 0 if missing($Y)
+(0 real changes made)
+
+. replace sample_income_base = 0 if missing(labs_0)
+(0 real changes made)
+
+. replace sample_income_base = 0 if missing(any_attend)
+(164,644 real changes made)
+
+. replace sample_income_base = 0 if christian_parent_sample != 1
+(102,973 real changes made)
+
+. replace sample_income_base = 0 if missing(female)
+(0 real changes made)
+
+. replace sample_income_base = 0 if missing(agefn)
+(0 real changes made)
+
+. replace sample_income_base = 0 if missing(qeduc2)
+(2,332 real changes made)
+
+. replace sample_income_base = 0 if missing(state)
+(0 real changes made)
+
+. 
+. gen byte sample_cons_base = 1
+
+. replace sample_cons_base = 0 if missing($Y)
+(0 real changes made)
+
+. replace sample_cons_base = 0 if missing(lcons_0)
+(14,551 real changes made)
+
+. replace sample_cons_base = 0 if missing(any_attend)
+(158,024 real changes made)
+
+. replace sample_cons_base = 0 if christian_parent_sample != 1
+(99,773 real changes made)
+
+. replace sample_cons_base = 0 if missing(female)
+(0 real changes made)
+
+. replace sample_cons_base = 0 if missing(agefn)
+(0 real changes made)
+
+. replace sample_cons_base = 0 if missing(qeduc2)
+(2,229 real changes made)
+
+. replace sample_cons_base = 0 if missing(state)
+(0 real changes made)
+
+. 
+. 
+. * ============================================================
+. * 6. Program: estimate one specification
+. * ============================================================
+. 
+. capture program drop run_attendance_spec
+
+. program define run_attendance_spec
+  1.     version 17
+  2. 
+.     syntax, EST(name) RGVARS(string) MINCELL(integer) ///
+>         [GINI MEDIAN RANK CONSUMP DENOMONLY FIXSAMPLE(name) SAVESAMPLE(name)]
+  3. 
+.     foreach v in rg_tmp nref_tmp sum_val_tmp med_val_tmp ref_tmp ///
+>         gini_tmp rank_tmp rankx_tmp sum_rankx_tmp relrank_tmp pos_tmp ///
+>         own_tmp val_tmp own_never own_any ref_never ref_any sample_tmp {
+  4.         capture drop `v'
+  5.     }
+  6. 
+.     if "`consump'" != "" {
+  7.         gen double own_tmp = lcons_0
+  8.         gen double val_tmp = cons1
+  9.         gen byte sample_tmp = sample_cons_base
+ 10.     }
+ 11.     else {
+ 12.         gen double own_tmp = labs_0
+ 13.         gen double val_tmp = inc1
+ 14.         gen byte sample_tmp = sample_income_base
+ 15.     }
+ 16. 
+.     if "`denomonly'" != "" {
+ 17.         replace sample_tmp = 0 if christian_cp_sample != 1
+ 18.     }
+ 19. 
+.     if "`fixsample'" != "" {
+ 20.         replace sample_tmp = 0 if `fixsample' != 1
+ 21.     }
+ 22. 
+.     egen long rg_tmp = group(`rgvars') if !missing(val_tmp)
+ 23. 
+.     bysort rg_tmp: egen long nref_tmp = count(val_tmp)
+ 24.     bysort rg_tmp: egen double sum_val_tmp = total(val_tmp)
+ 25. 
+.     gen double ref_tmp = .
+ 26. 
+.     local cellrule "nref_tmp >= `mincell'"
+ 27. 
+.     if "`rank'" != "" {
+ 28. 
+.         sort rg_tmp val_tmp
+ 29.         by rg_tmp: egen double pos_tmp = rank(val_tmp)
+ 30. 
+.         gen double relrank_tmp = .
+ 31.         replace relrank_tmp = (pos_tmp - 1) / (nref_tmp - 1) ///
+>             if `cellrule' & nref_tmp > 1 & !missing(pos_tmp)
+ 32. 
+.         replace ref_tmp = relrank_tmp
+ 33.     }
+ 34.     else if "`median'" != "" {
+ 35. 
+.         bysort rg_tmp: egen double med_val_tmp = median(val_tmp)
+ 36. 
+.         replace ref_tmp = log(med_val_tmp) ///
+>             if `cellrule' & med_val_tmp > 0 & !missing(med_val_tmp)
+ 37.     }
+ 38.     else {
+ 39. 
+.         replace ref_tmp = log((sum_val_tmp - val_tmp) / (nref_tmp - 1)) ///
+>             if `cellrule' & nref_tmp > 1 ///
+>             & !missing(val_tmp) & (sum_val_tmp - val_tmp) > 0
+ 40.     }
+ 41. 
+.     if "`gini'" != "" {
+ 42. 
+.         sort rg_tmp val_tmp
+ 43.         by rg_tmp: gen double rank_tmp = sum(!missing(val_tmp)) if !missing(val_tmp)
+ 44.         gen double rankx_tmp = rank_tmp * val_tmp if !missing(val_tmp)
+ 45. 
+.         bysort rg_tmp: egen double sum_rankx_tmp = total(rankx_tmp)
+ 46. 
+.         gen double gini_tmp = ///
+>             (2 * sum_rankx_tmp) / (nref_tmp * sum_val_tmp) ///
+>             - (nref_tmp + 1) / nref_tmp ///
+>             if `cellrule' & nref_tmp > 1 & sum_val_tmp > 0
+ 47. 
+.         replace sample_tmp = 0 if missing(gini_tmp)
+ 48.     }
+ 49. 
+.     replace sample_tmp = 0 if missing(own_tmp)
+ 50.     replace sample_tmp = 0 if missing(ref_tmp)
+ 51.     replace sample_tmp = 0 if missing(any_attend)
+ 52.     replace sample_tmp = 0 if missing(rg_tmp)
+ 53. 
+.     gen double own_never = 0 if sample_tmp == 1
+ 54.     gen double own_any   = 0 if sample_tmp == 1
+ 55.     gen double ref_never = 0 if sample_tmp == 1
+ 56.     gen double ref_any   = 0 if sample_tmp == 1
+ 57. 
+.     replace own_never = own_tmp if sample_tmp == 1 & any_attend == 0
+ 58.     replace own_any   = own_tmp if sample_tmp == 1 & any_attend == 1
+ 59. 
+.     replace ref_never = ref_tmp if sample_tmp == 1 & any_attend == 0
+ 60.     replace ref_any   = ref_tmp if sample_tmp == 1 & any_attend == 1
+ 61. 
+.     sort $ID year
+ 62.     xtset $ID year
+ 63. 
+.     if "`gini'" != "" {
+ 64.         xtreg $Y ///
+>             c.own_never c.own_any ///
+>             c.ref_never c.ref_any ///
+>             i.any_attend ///
+>             c.gini_tmp ///
+>             $X ///
+>             if sample_tmp == 1, ///
+>             fe vce(cluster rg_tmp) nonest
+ 65.     }
+ 66.     else {
+ 67.         xtreg $Y ///
+>             c.own_never c.own_any ///
+>             c.ref_never c.ref_any ///
+>             i.any_attend ///
+>             $X ///
+>             if sample_tmp == 1, ///
+>             fe vce(cluster rg_tmp) nonest
+ 68.     }
+ 69. 
+.     estimates store `est'
+ 70. 
+.     if "`savesample'" != "" {
+ 71.         capture drop `savesample'
+ 72.         gen byte `savesample' = e(sample)
+ 73.     }
+ 74. 
+.     di as text " "
+ 75.     di as text "Specification `est'"
+ 76.     di as text "N = " e(N) " ; Individuals = " e(N_g) " ; Within R2 = " %6.3f e(r2_w)
+ 77. 
+.     foreach v in rg_tmp nref_tmp sum_val_tmp med_val_tmp ref_tmp ///
+>         gini_tmp rank_tmp rankx_tmp sum_rankx_tmp relrank_tmp pos_tmp ///
+>         own_tmp val_tmp own_never own_any ref_never ref_any sample_tmp {
+ 78.         capture drop `v'
+ 79.     }
+ 80. end
+
+. 
+. 
+. * ============================================================
+. * 7. Define fixed samples through actual estimation samples
+. * ============================================================
+. 
+. run_attendance_spec, ///
+>     est(R1) ///
+>     rgvars("year female agefn qeduc2 state") ///
+>     mincell(10) ///
+>     savesample(sample_R1)
+(8,277 missing values generated)
+(360,651 missing values generated)
+(355,721 real changes made)
+(0 real changes made)
+(1,461 real changes made)
+(0 real changes made)
+(0 real changes made)
+(271,410 missing values generated)
+(271,410 missing values generated)
+(271,410 missing values generated)
+(271,410 missing values generated)
+(41,538 real changes made)
+(47,692 real changes made)
+(41,545 real changes made)
+(47,696 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     89,135
+Group variable: pid                             Number of groups  =     18,745
+
+R-squared:                                      Obs per group:
+     Within  = 0.0924                                         min =          1
+     Between = 0.2119                                         avg =        4.8
+     Overall = 0.1777                                         max =         12
+
+                                                F(53, 3249)       =     110.22
+corr(u_i, Xb) = 0.1482                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 3,250 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1224489    .019452     6.29   0.000     .0843095    .1605882
+         own_any |    .048068   .0210458     2.28   0.022     .0068037    .0893324
+       ref_never |  -.1728895   .0506729    -3.41   0.001    -.2722435   -.0735355
+         ref_any |  -.0499304   .0469906    -1.06   0.288    -.1420646    .0422038
+                 |
+      any_attend |
+ Any attendance  |  -.4499733   .4118192    -1.09   0.275    -1.257425    .3574783
+                 |
+         marital |
+              2  |  -.1066921   .0289108    -3.69   0.000    -.1633772   -.0500069
+              3  |  -.2077614   .0556683    -3.73   0.000    -.3169099   -.0986129
+              4  |   .0086995   .0416739     0.21   0.835    -.0730104    .0904093
+              5  |  -.3950799   .0482028    -8.20   0.000    -.4895909   -.3005689
+                 |
+            educ |  -.0493281   .0090733    -5.44   0.000    -.0671181   -.0315381
+           hsize |   .0156998   .0093499     1.68   0.093    -.0026325    .0340322
+           kid01 |   .2596512   .0271596     9.56   0.000     .2063995    .3129029
+           kid24 |   .0117883   .0201146     0.59   0.558    -.0276504    .0512269
+           kid57 |    .007598   .0180578     0.42   0.674    -.0278078    .0430037
+          kid810 |  -.0131523   .0171404    -0.77   0.443    -.0467595    .0204548
+         kid1112 |  -.0098093   .0192006    -0.51   0.609    -.0474558    .0278373
+         kid1315 |  -.0076765    .016004    -0.48   0.632    -.0390554    .0237025
+         kid1618 |  -.0004525   .0165395    -0.03   0.978    -.0328814    .0319765
+                 |
+       curhealth |
+              2  |   1.095873   .0428423    25.58   0.000     1.011872    1.179873
+              3  |   1.653078   .0434922    38.01   0.000     1.567803    1.738353
+              4  |   2.069367   .0443024    46.71   0.000     1.982504     2.15623
+              5  |    2.35127   .0467602    50.28   0.000     2.259587    2.442952
+                 |
+          nlabor |   .0144825   .0025196     5.75   0.000     .0095423    .0194226
+                 |
+          e11103 |
+  [2] Part Time  |    .007177   .0168651     0.43   0.670    -.0258903    .0402444
+[3] Not Working  |   .0725281   .0254173     2.85   0.004     .0226925    .1223637
+                 |
+           owner |  -.0162703   .0191568    -0.85   0.396    -.0538309    .0212904
+          lworkh |   .0605581   .0070943     8.54   0.000     .0466483    .0744679
+                 |
+            year |
+           2001  |  -.0438079   .0283228    -1.55   0.122    -.0993402    .0117245
+           2003  |   -.259794   .0302674    -8.58   0.000    -.3191392   -.2004488
+           2005  |  -.2613456   .0307103    -8.51   0.000    -.3215592    -.201132
+           2007  |  -.3070494   .0319365    -9.61   0.000     -.369667   -.2444317
+           2008  |  -.3175167   .0327272    -9.70   0.000    -.3816848   -.2533486
+           2009  |  -.4193313    .032879   -12.75   0.000     -.483797   -.3548657
+           2011  |  -.3746875   .0324769   -11.54   0.000    -.4383648   -.3110103
+           2013  |   -.260761   .0332046    -7.85   0.000    -.3258651   -.1956569
+           2015  |  -.1383003   .0347956    -3.97   0.000    -.2065238   -.0700767
+           2017  |  -.2192479    .036373    -6.03   0.000    -.2905643   -.1479316
+           2019  |  -.0529966   .0399428    -1.33   0.185    -.1313122    .0253191
+                 |
+           state |
+              2  |   .0389668   .1488094     0.26   0.793    -.2528029    .3307364
+              3  |    .209301   .1582672     1.32   0.186    -.1010126    .5196147
+              4  |   .8383171   .5117776     1.64   0.102    -.1651224    1.841757
+              5  |   .1210574   .1637553     0.74   0.460    -.2000168    .4421316
+              6  |   .2057589   .1775495     1.16   0.247    -.1423613    .5538792
+              7  |  -.0409375   .1970029    -0.21   0.835       -.4272    .3453251
+              8  |  -.0015306   .1706476    -0.01   0.993    -.3361184    .3330572
+              9  |   .0473551    .169958     0.28   0.781    -.2858806    .3805907
+             10  |   .0038274   .2731718     0.01   0.989     -.531779    .5394339
+             11  |  -.1225239   .1714803    -0.71   0.475    -.4587443    .2136964
+             12  |  -.1673215   .2089791    -0.80   0.423    -.5770657    .2424227
+             13  |  -.0873572   .2252979    -0.39   0.698    -.5290975    .3543832
+             14  |   .1015927   .1895049     0.54   0.592    -.2699684    .4731538
+             15  |   .0640292   .1991966     0.32   0.748    -.3265345    .4545928
+             16  |  -.1376893   .2187745    -0.63   0.529    -.5666393    .2912607
+                 |
+           _cons |   6.559808   .5408738    12.13   0.000      5.49932    7.620296
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2692345
+         sigma_e |  1.1373661
+             rho |  .55463045   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R1
+N = 89135 ; Individuals = 18745 ; Within R2 =  0.092
+
+. 
+. run_attendance_spec, ///
+>     est(INTBASE) ///
+>     rgvars("year female agefn qeduc2 state") ///
+>     mincell(10) ///
+>     denomonly ///
+>     savesample(sample_INT)
+(12,378 real changes made)
+(8,277 missing values generated)
+(360,651 missing values generated)
+(355,721 real changes made)
+(0 real changes made)
+(1,245 real changes made)
+(0 real changes made)
+(0 real changes made)
+(283,572 missing values generated)
+(283,572 missing values generated)
+(283,572 missing values generated)
+(283,572 missing values generated)
+(34,733 real changes made)
+(42,339 real changes made)
+(34,738 real changes made)
+(42,341 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     76,991
+Group variable: pid                             Number of groups  =     16,159
+
+R-squared:                                      Obs per group:
+     Within  = 0.0932                                         min =          1
+     Between = 0.2188                                         avg =        4.8
+     Overall = 0.1830                                         max =         12
+
+                                                F(53, 3237)       =      94.01
+corr(u_i, Xb) = 0.1557                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 3,238 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1514605   .0221524     6.84   0.000     .1080263    .1948946
+         own_any |   .0560547   .0232895     2.41   0.016     .0103911    .1017183
+       ref_never |  -.1929214   .0551302    -3.50   0.000     -.301015   -.0848277
+         ref_any |  -.0296054   .0495025    -0.60   0.550    -.1266648    .0674539
+                 |
+      any_attend |
+ Any attendance  |  -.6438601   .4446895    -1.45   0.148    -1.515762    .2280413
+                 |
+         marital |
+              2  |  -.1234285   .0316161    -3.90   0.000    -.1854181   -.0614388
+              3  |  -.2171081   .0572282    -3.79   0.000    -.3293152    -.104901
+              4  |   .0327781    .045068     0.73   0.467    -.0555867    .1211429
+              5  |  -.4214305   .0516275    -8.16   0.000    -.5226563   -.3202047
+                 |
+            educ |  -.0453643   .0105436    -4.30   0.000    -.0660371   -.0246915
+           hsize |   .0108964   .0099894     1.09   0.275    -.0086898    .0304825
+           kid01 |   .2370766   .0292218     8.11   0.000     .1797814    .2943717
+           kid24 |   .0093175   .0220791     0.42   0.673     -.033973    .0526079
+           kid57 |   -.002667   .0195227    -0.14   0.891    -.0409451    .0356111
+          kid810 |  -.0203524   .0182888    -1.11   0.266    -.0562113    .0155064
+         kid1112 |   -.015006   .0209128    -0.72   0.473    -.0560096    .0259976
+         kid1315 |  -.0073589   .0171336    -0.43   0.668    -.0409528    .0262349
+         kid1618 |  -.0002076   .0174937    -0.01   0.991    -.0345074    .0340923
+                 |
+       curhealth |
+              2  |   1.077477   .0467739    23.04   0.000     .9857672    1.169186
+              3  |   1.639574   .0478583    34.26   0.000     1.545738     1.73341
+              4  |   2.057382   .0487492    42.20   0.000       1.9618    2.152965
+              5  |   2.341521   .0515095    45.46   0.000     2.240526    2.442515
+                 |
+          nlabor |     .01571   .0027173     5.78   0.000     .0103822    .0210378
+                 |
+          e11103 |
+  [2] Part Time  |   .0180884   .0183399     0.99   0.324    -.0178705    .0540473
+[3] Not Working  |   .0701424    .027334     2.57   0.010     .0165488    .1237361
+                 |
+           owner |  -.0013747   .0206771    -0.07   0.947    -.0419161    .0391668
+          lworkh |   .0532006   .0074831     7.11   0.000     .0385285    .0678726
+                 |
+            year |
+           2001  |  -.0437809   .0321239    -1.36   0.173    -.1067662    .0192044
+           2003  |  -.2599387   .0341141    -7.62   0.000     -.326826   -.1930514
+           2005  |  -.2741597   .0346878    -7.90   0.000     -.342172   -.2061474
+           2007  |  -.3188429   .0356031    -8.96   0.000    -.3886497    -.249036
+           2008  |  -.3254679   .0364289    -8.93   0.000     -.396894   -.2540418
+           2009  |  -.4256696   .0369742   -11.51   0.000    -.4981649   -.3531744
+           2011  |  -.3907652   .0362536   -10.78   0.000    -.4618475    -.319683
+           2013  |  -.2881941   .0370476    -7.78   0.000    -.3608333    -.215555
+           2015  |  -.1492875   .0384463    -3.88   0.000    -.2246691   -.0739059
+           2017  |  -.2332761   .0405472    -5.75   0.000    -.3127769   -.1537753
+           2019  |  -.0778237     .04364    -1.78   0.075    -.1633884    .0077411
+                 |
+           state |
+              2  |  -.0727217   .1618842    -0.45   0.653    -.3901275    .2446842
+              3  |   .1049109   .1764375     0.59   0.552    -.2410295    .4508513
+              4  |   .6977973   .5798982     1.20   0.229    -.4392074    1.834802
+              5  |   .0889732   .1841929     0.48   0.629    -.2721733    .4501198
+              6  |   .1503306   .2023807     0.74   0.458    -.2464767    .5471379
+              7  |  -.1388632   .2213794    -0.63   0.531    -.5729212    .2951948
+              8  |  -.0742485     .19207    -0.39   0.699    -.4508396    .3023426
+              9  |   .0951792    .190117     0.50   0.617    -.2775827    .4679411
+             10  |  -.0682238   .2847891    -0.24   0.811    -.6266091    .4901614
+             11  |  -.1290991   .1887129    -0.68   0.494     -.499108    .2409098
+             12  |   -.269191   .2238863    -1.20   0.229    -.7081643    .1697823
+             13  |  -.1266828   .2514478    -0.50   0.614    -.6196959    .3663302
+             14  |   .1193332   .2122049     0.56   0.574    -.2967363    .5354027
+             15  |   .0630645   .2333844     0.27   0.787    -.3945316    .5206606
+             16  |  -.0947033   .2402328    -0.39   0.693     -.565727    .3763204
+                 |
+           _cons |   6.497768   .5919484    10.98   0.000     5.337136    7.658399
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2591222
+         sigma_e |  1.1356947
+             rho |  .55140291   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification INTBASE
+N = 76991 ; Individuals = 16159 ; Within R2 =  0.093
+
+. 
+. 
+. * ============================================================
+. * 8. Run robustness specifications
+. * ============================================================
+. 
+. run_attendance_spec, ///
+>     est(R2) ///
+>     rgvars("year female agefn state") ///
+>     mincell(10) ///
+>     fixsample(sample_R1)
+(1,567 real changes made)
+(360,651 missing values generated)
+(359,868 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(41,490 real changes made)
+(47,634 real changes made)
+(41,497 real changes made)
+(47,638 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     89,135
+Group variable: pid                             Number of groups  =     18,745
+
+R-squared:                                      Obs per group:
+     Within  = 0.0925                                         min =          1
+     Between = 0.2163                                         avg =        4.8
+     Overall = 0.1811                                         max =         12
+
+                                                F(53, 1725)       =     111.33
+corr(u_i, Xb) = 0.1546                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 1,726 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |    .118378   .0190638     6.21   0.000     .0809874    .1557686
+         own_any |   .0531512    .020685     2.57   0.010      .012581    .0937215
+       ref_never |  -.2736059   .0601875    -4.55   0.000     -.391654   -.1555578
+         ref_any |  -.1443256   .0547882    -2.63   0.009    -.2517839   -.0368674
+                 |
+      any_attend |
+ Any attendance  |  -.6074417   .5155317    -1.18   0.239    -1.618575    .4036914
+                 |
+         marital |
+              2  |  -.1112022   .0285395    -3.90   0.000    -.1671779   -.0552264
+              3  |  -.2100006   .0569513    -3.69   0.000    -.3217015   -.0982996
+              4  |   .0097235   .0408276     0.24   0.812    -.0703533    .0898004
+              5  |  -.3950539    .047757    -8.27   0.000    -.4887216   -.3013861
+                 |
+            educ |  -.0514217   .0090099    -5.71   0.000    -.0690932   -.0337503
+           hsize |    .016356   .0095787     1.71   0.088    -.0024312    .0351431
+           kid01 |   .2576154   .0271755     9.48   0.000     .2043151    .3109157
+           kid24 |   .0098227    .020158     0.49   0.626    -.0297139    .0493594
+           kid57 |   .0053834   .0171527     0.31   0.754    -.0282589    .0390257
+          kid810 |   -.014813    .017156    -0.86   0.388    -.0484617    .0188357
+         kid1112 |  -.0109278   .0190866    -0.57   0.567     -.048363    .0265074
+         kid1315 |  -.0085313   .0158749    -0.54   0.591    -.0396674    .0226047
+         kid1618 |  -.0010214   .0161343    -0.06   0.950    -.0326663    .0306234
+                 |
+       curhealth |
+              2  |   1.095649   .0414589    26.43   0.000     1.014334    1.176964
+              3  |   1.652853   .0424314    38.95   0.000     1.569631    1.736076
+              4  |   2.068481    .043091    48.00   0.000     1.983965    2.152997
+              5  |   2.350682   .0457158    51.42   0.000     2.261018    2.440346
+                 |
+          nlabor |   .0144936   .0025485     5.69   0.000     .0094952    .0194921
+                 |
+          e11103 |
+  [2] Part Time  |   .0061184   .0171672     0.36   0.722    -.0275523    .0397891
+[3] Not Working  |   .0683927   .0244039     2.80   0.005     .0205284     .116257
+                 |
+           owner |   -.014934   .0192777    -0.77   0.439     -.052744    .0228761
+          lworkh |   .0609386   .0071343     8.54   0.000     .0469459    .0749313
+                 |
+            year |
+           2001  |  -.0378301   .0275537    -1.37   0.170    -.0918722    .0162121
+           2003  |  -.2347974   .0303006    -7.75   0.000    -.2942271   -.1753677
+           2005  |  -.2325991    .031675    -7.34   0.000    -.2947246   -.1704736
+           2007  |  -.2766479   .0325608    -8.50   0.000    -.3405107    -.212785
+           2008  |   -.284909   .0338039    -8.43   0.000      -.35121   -.2186081
+           2009  |  -.3855629   .0339818   -11.35   0.000    -.4522127   -.3189131
+           2011  |    -.34504   .0329435   -10.47   0.000    -.4096534   -.2804267
+           2013  |  -.2276926   .0337724    -6.74   0.000    -.2939318   -.1614534
+           2015  |  -.1013852   .0366959    -2.76   0.006    -.1733584    -.029412
+           2017  |  -.1759553   .0376021    -4.68   0.000    -.2497058   -.1022048
+           2019  |  -.0032632   .0426304    -0.08   0.939    -.0868759    .0803494
+                 |
+           state |
+              2  |   .0714192    .146033     0.49   0.625    -.2150012    .3578396
+              3  |   .2205193   .1552501     1.42   0.156     -.083979    .5250176
+              4  |    .892228   .5087316     1.75   0.080    -.1055678    1.890024
+              5  |   .1388065   .1588429     0.87   0.382    -.1727384    .4503514
+              6  |   .2316918   .1742986     1.33   0.184     -.110167    .5735507
+              7  |  -.0372315   .1926132    -0.19   0.847    -.4150115    .3405485
+              8  |   .0246003   .1657899     0.15   0.882    -.3005701    .3497708
+              9  |   .0642484   .1654654     0.39   0.698    -.2602855    .3887824
+             10  |   .0089748   .2960222     0.03   0.976    -.5716254    .5895751
+             11  |  -.1076675   .1663044    -0.65   0.517    -.4338471     .218512
+             12  |  -.1742467   .2054053    -0.85   0.396    -.5771164    .2286229
+             13  |  -.0996108   .2216308    -0.45   0.653    -.5343042    .3350827
+             14  |   .0949776   .1840693     0.52   0.606     -.266045    .4560001
+             15  |   .0567929   .1939955     0.29   0.770    -.3236983    .4372842
+             16  |  -.1475419   .2186811    -0.67   0.500      -.57645    .2813662
+                 |
+           _cons |   7.601204   .6376493    11.92   0.000     6.350557    8.851852
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2666947
+         sigma_e |  1.1373109
+             rho |  .55366466   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R2
+N = 89135 ; Individuals = 18745 ; Within R2 =  0.092
+
+. 
+. run_attendance_spec, ///
+>     est(R3) ///
+>     rgvars("year female agefn married2 state") ///
+>     mincell(10) ///
+>     fixsample(sample_R1)
+(1,567 real changes made)
+(40 missing values generated)
+(360,651 missing values generated)
+(354,878 real changes made)
+(0 real changes made)
+(698 real changes made)
+(0 real changes made)
+(0 real changes made)
+(272,214 missing values generated)
+(272,214 missing values generated)
+(272,214 missing values generated)
+(272,214 missing values generated)
+(41,118 real changes made)
+(47,308 real changes made)
+(41,125 real changes made)
+(47,312 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     88,437
+Group variable: pid                             Number of groups  =     18,666
+
+R-squared:                                      Obs per group:
+     Within  = 0.0926                                         min =          1
+     Between = 0.2156                                         avg =        4.7
+     Overall = 0.1805                                         max =         12
+
+                                                F(53, 3090)       =     106.42
+corr(u_i, Xb) = 0.1531                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 3,091 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1192919   .0191324     6.24   0.000     .0817784    .1568054
+         own_any |   .0560093   .0203254     2.76   0.006     .0161566     .095862
+       ref_never |   -.228842   .0508748    -4.50   0.000    -.3285939   -.1290901
+         ref_any |  -.1238321   .0489669    -2.53   0.011    -.2198431   -.0278212
+                 |
+      any_attend |
+ Any attendance  |     -.3811    .480704    -0.79   0.428    -1.323632    .5614317
+                 |
+         marital |
+              2  |  -.1102855   .0294587    -3.74   0.000    -.1680461   -.0525249
+              3  |  -.2399197   .0562514    -4.27   0.000    -.3502136   -.1296258
+              4  |  -.0107275   .0423648    -0.25   0.800    -.0937935    .0723384
+              5  |  -.4111455   .0469257    -8.76   0.000    -.5031542   -.3191368
+                 |
+            educ |  -.0518039   .0089258    -5.80   0.000     -.069305   -.0343028
+           hsize |   .0159961   .0095718     1.67   0.095    -.0027717    .0347638
+           kid01 |   .2615824   .0285047     9.18   0.000     .2056922    .3174725
+           kid24 |   .0101944   .0201766     0.51   0.613    -.0293665    .0497553
+           kid57 |   .0015192   .0175317     0.09   0.931    -.0328559    .0358943
+          kid810 |  -.0175233    .017366    -1.01   0.313    -.0515734    .0165267
+         kid1112 |  -.0131444   .0190237    -0.69   0.490    -.0504447    .0241559
+         kid1315 |  -.0100928   .0163657    -0.62   0.537    -.0421816     .021996
+         kid1618 |  -.0018365   .0163964    -0.11   0.911    -.0339855    .0303124
+                 |
+       curhealth |
+              2  |   1.099606   .0415572    26.46   0.000     1.018123    1.181089
+              3  |    1.65905   .0424632    39.07   0.000     1.575791    1.742309
+              4  |    2.07276   .0435285    47.62   0.000     1.987413    2.158108
+              5  |   2.353957   .0463694    50.77   0.000     2.263039    2.444875
+                 |
+          nlabor |   .0145744   .0025164     5.79   0.000     .0096404    .0195084
+                 |
+          e11103 |
+  [2] Part Time  |   .0039703   .0171017     0.23   0.816    -.0295615    .0375021
+[3] Not Working  |   .0646543   .0249032     2.60   0.009     .0158257    .1134829
+                 |
+           owner |  -.0122799   .0192437    -0.64   0.523    -.0500117    .0254519
+          lworkh |   .0585659   .0071925     8.14   0.000     .0444632    .0726686
+                 |
+            year |
+           2001  |  -.0405439   .0298965    -1.36   0.175     -.099163    .0180752
+           2003  |  -.2450351   .0318769    -7.69   0.000    -.3075372   -.1825331
+           2005  |  -.2452945   .0329912    -7.44   0.000    -.3099813   -.1806077
+           2007  |  -.2874543   .0334947    -8.58   0.000    -.3531285   -.2217801
+           2008  |  -.2973965   .0343735    -8.65   0.000    -.3647938   -.2299992
+           2009  |  -.3977159   .0348328   -11.42   0.000    -.4660136   -.3294181
+           2011  |  -.3547539   .0343825   -10.32   0.000    -.4221688    -.287339
+           2013  |  -.2382231   .0349679    -6.81   0.000    -.3067857   -.1696605
+           2015  |  -.1141457   .0373735    -3.05   0.002     -.187425   -.0408663
+           2017  |  -.1912829   .0386734    -4.95   0.000    -.2671111   -.1154548
+           2019  |  -.0207536   .0422889    -0.49   0.624    -.1036708    .0621635
+                 |
+           state |
+              2  |   .1116121   .1526069     0.73   0.465    -.1876091    .4108334
+              3  |   .2179861   .1599744     1.36   0.173    -.0956809     .531653
+              4  |   1.154744   1.093441     1.06   0.291    -.9892015    3.298689
+              5  |   .1377407   .1636617     0.84   0.400     -.183156    .4586374
+              6  |   .2507751   .1807615     1.39   0.165    -.1036498       .6052
+              7  |  -.0345047   .1984269    -0.17   0.862    -.4235667    .3545573
+              8  |   .0320247   .1713752     0.19   0.852    -.3039961    .3680455
+              9  |   .0718482   .1717069     0.42   0.676     -.264823    .4085194
+             10  |  -.1266419   .2841599    -0.45   0.656    -.6838033    .4305194
+             11  |    -.08661   .1727574    -0.50   0.616    -.4253409     .252121
+             12  |  -.1397263   .2175338    -0.64   0.521    -.5662517    .2867991
+             13  |  -.1705405   .2387711    -0.71   0.475    -.6387067    .2976256
+             14  |   .1075387   .1928984     0.56   0.577    -.2706833    .4857608
+             15  |   .0850464   .1998588     0.43   0.670    -.3068232     .476916
+             16  |  -.1112692   .2272399    -0.49   0.624    -.5568259    .3342874
+                 |
+           _cons |   7.156009   .5566144    12.86   0.000     6.064637     8.24738
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2677339
+         sigma_e |  1.1367016
+             rho |  .55433471   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R3
+N = 88437 ; Individuals = 18666 ; Within R2 =  0.093
+
+. 
+. run_attendance_spec, ///
+>     est(R4) ///
+>     rgvars("year female agefn qeduc2 state parent_denom") ///
+>     mincell(10) ///
+>     denomonly ///
+>     fixsample(sample_INT)
+(12,378 real changes made)
+(1,333 real changes made)
+(146,913 missing values generated)
+(360,651 missing values generated)
+(297,110 real changes made)
+(0 real changes made)
+(12,273 real changes made)
+(0 real changes made)
+(0 real changes made)
+(295,933 missing values generated)
+(295,933 missing values generated)
+(295,933 missing values generated)
+(295,933 missing values generated)
+(28,368 real changes made)
+(36,343 real changes made)
+(28,373 real changes made)
+(36,345 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     64,718
+Group variable: pid                             Number of groups  =     14,340
+
+R-squared:                                      Obs per group:
+     Within  = 0.0951                                         min =          1
+     Between = 0.1889                                         avg =        4.5
+     Overall = 0.1697                                         max =         12
+
+                                                F(52, 2603)       =      82.26
+corr(u_i, Xb) = 0.1002                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 2,604 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1557737   .0243234     6.40   0.000     .1080785    .2034688
+         own_any |    .058551   .0240239     2.44   0.015     .0114432    .1056588
+       ref_never |  -.1595147   .0477309    -3.34   0.001    -.2531091   -.0659202
+         ref_any |   .0111285   .0425583     0.26   0.794     -.072323      .09458
+                 |
+      any_attend |
+ Any attendance  |  -.7081707   .4387885    -1.61   0.107     -1.56858     .152239
+                 |
+         marital |
+              2  |  -.1040252   .0351417    -2.96   0.003    -.1729337   -.0351167
+              3  |  -.1698822   .0612342    -2.77   0.006    -.2899549   -.0498094
+              4  |   .0298577   .0492338     0.61   0.544    -.0666837    .1263992
+              5  |  -.4044006   .0579186    -6.98   0.000    -.5179717   -.2908295
+                 |
+            educ |  -.0272404   .0120233    -2.27   0.024    -.0508167   -.0036641
+           hsize |   .0152014   .0113112     1.34   0.179    -.0069785    .0373813
+           kid01 |   .2313314   .0336469     6.88   0.000      .165354    .2973088
+           kid24 |   .0225459   .0251362     0.90   0.370     -.026743    .0718348
+           kid57 |  -.0065764   .0220792    -0.30   0.766    -.0498709    .0367182
+          kid810 |   -.029049   .0215166    -1.35   0.177    -.0712405    .0131424
+         kid1112 |  -.0204511   .0227244    -0.90   0.368    -.0650109    .0241087
+         kid1315 |  -.0028975   .0190276    -0.15   0.879    -.0402083    .0344132
+         kid1618 |   .0105325   .0194241     0.54   0.588    -.0275557    .0486206
+                 |
+       curhealth |
+              2  |    1.08165   .0510118    21.20   0.000      .981622    1.181678
+              3  |   1.650249   .0519784    31.75   0.000     1.548326    1.752173
+              4  |   2.062403   .0528418    39.03   0.000     1.958787     2.16602
+              5  |   2.339218    .056063    41.72   0.000     2.229285    2.449151
+                 |
+          nlabor |   .0173103    .002967     5.83   0.000     .0114925    .0231281
+                 |
+          e11103 |
+  [2] Part Time  |   .0151442   .0201375     0.75   0.452     -.024343    .0546313
+[3] Not Working  |   .0673746   .0300354     2.24   0.025     .0084789    .1262703
+                 |
+           owner |   .0267962    .023237     1.15   0.249    -.0187686     .072361
+          lworkh |   .0494448   .0083323     5.93   0.000     .0331062    .0657834
+                 |
+            year |
+           2001  |  -.0098689   .0412048    -0.24   0.811    -.0906664    .0709285
+           2003  |  -.2351964    .043421    -5.42   0.000    -.3203395   -.1500532
+           2005  |  -.2509964   .0431844    -5.81   0.000    -.3356756   -.1663172
+           2007  |  -.3067223   .0440073    -6.97   0.000    -.3930152   -.2204293
+           2008  |  -.3183819   .0441128    -7.22   0.000    -.4048816   -.2318821
+           2009  |  -.4311924   .0450042    -9.58   0.000    -.5194401   -.3429447
+           2011  |  -.3976544   .0448756    -8.86   0.000    -.4856498    -.309659
+           2013  |  -.2871214    .045201    -6.35   0.000    -.3757549   -.1984879
+           2015  |  -.1574671   .0465178    -3.39   0.001    -.2486828   -.0662515
+           2017  |  -.2458228   .0476942    -5.15   0.000    -.3393452   -.1523003
+           2019  |   -.082729   .0505167    -1.64   0.102     -.181786    .0163281
+                 |
+           state |
+              2  |    .421513   .3827616     1.10   0.271    -.3290349    1.172061
+              3  |   .9041495   .4646199     1.95   0.052    -.0069123    1.815211
+              5  |   .9982423   .4751977     2.10   0.036     .0664386    1.930046
+              6  |   .8631196    .480141     1.80   0.072    -.0783771    1.804616
+              7  |   .6342532   .5465288     1.16   0.246    -.4374218    1.705928
+              8  |   .7445402    .474409     1.57   0.117     -.185717    1.674797
+              9  |   1.082388   .4754339     2.28   0.023     .1501214    2.014655
+             10  |   .8503188   .6823629     1.25   0.213    -.4877101    2.188348
+             11  |   .7342519   .4747917     1.55   0.122    -.1967557     1.66526
+             12  |   1.056151   .5247776     2.01   0.044     .0271272    2.085175
+             13  |    .649222   .9995479     0.65   0.516    -1.310767    2.609211
+             14  |   .7597511   .5577084     1.36   0.173    -.3338458    1.853348
+             15  |   .8315207   .6432076     1.29   0.196    -.4297294    2.092771
+             16  |   .8952768    .629277     1.42   0.155    -.3386573    2.129211
+                 |
+           _cons |     5.0086   .6867544     7.29   0.000     3.661959     6.35524
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2783117
+         sigma_e |  1.1312502
+             rho |  .56080599   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R4
+N = 64718 ; Individuals = 14340 ; Within R2 =  0.095
+
+. 
+. run_attendance_spec, ///
+>     est(R5) ///
+>     rgvars("year female agefn qeduc2 state") ///
+>     mincell(10) ///
+>     median ///
+>     fixsample(sample_R1)
+(1,567 real changes made)
+(8,277 missing values generated)
+(360,651 missing values generated)
+(355,721 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(41,490 real changes made)
+(47,634 real changes made)
+(41,497 real changes made)
+(47,638 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     89,135
+Group variable: pid                             Number of groups  =     18,745
+
+R-squared:                                      Obs per group:
+     Within  = 0.0923                                         min =          1
+     Between = 0.2129                                         avg =        4.8
+     Overall = 0.1784                                         max =         12
+
+                                                F(53, 3249)       =     110.22
+corr(u_i, Xb) = 0.1498                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 3,250 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1227208    .019533     6.28   0.000     .0844226     .161019
+         own_any |    .048568   .0211168     2.30   0.022     .0071644    .0899716
+       ref_never |  -.1618789   .0566441    -2.86   0.004    -.2729406   -.0508172
+         ref_any |  -.0364192   .0534076    -0.68   0.495    -.1411351    .0682968
+                 |
+      any_attend |
+ Any attendance  |  -.4647164   .4452772    -1.04   0.297    -1.337769    .4083361
+                 |
+         marital |
+              2  |  -.1053017    .028861    -3.65   0.000    -.1618892   -.0487141
+              3  |  -.2066967    .055642    -3.71   0.000    -.3157937   -.0975997
+              4  |   .0084638   .0416625     0.20   0.839    -.0732237    .0901512
+              5  |  -.3947494    .048183    -8.19   0.000    -.4892216   -.3002772
+                 |
+            educ |  -.0495017   .0090849    -5.45   0.000    -.0673145   -.0316889
+           hsize |   .0155758   .0093534     1.67   0.096    -.0027634     .033915
+           kid01 |   .2603512    .027159     9.59   0.000     .2071006    .3136017
+           kid24 |   .0119223   .0201211     0.59   0.554    -.0275291    .0513737
+           kid57 |    .007788   .0180807     0.43   0.667    -.0276627    .0432388
+          kid810 |   -.012936   .0171472    -0.75   0.451    -.0465565    .0206845
+         kid1112 |  -.0095789   .0192036    -0.50   0.618    -.0472314    .0280736
+         kid1315 |  -.0075442    .016018    -0.47   0.638    -.0389505    .0238622
+         kid1618 |  -.0004671   .0165506    -0.03   0.977    -.0329178    .0319836
+                 |
+       curhealth |
+              2  |   1.095717    .042854    25.57   0.000     1.011694    1.179741
+              3  |   1.653065   .0435062    38.00   0.000     1.567763    1.738367
+              4  |   2.069266    .044312    46.70   0.000     1.982383    2.156148
+              5  |   2.351392   .0467745    50.27   0.000     2.259682    2.443103
+                 |
+          nlabor |   .0144606   .0025206     5.74   0.000     .0095186    .0194026
+                 |
+          e11103 |
+  [2] Part Time  |   .0070307   .0168701     0.42   0.677    -.0260464    .0401079
+[3] Not Working  |   .0727758   .0254248     2.86   0.004     .0229255    .1226261
+                 |
+           owner |  -.0169182   .0191785    -0.88   0.378    -.0545213    .0206849
+          lworkh |   .0604952   .0070961     8.53   0.000      .046582    .0744084
+                 |
+            year |
+           2001  |  -.0447947   .0283132    -1.58   0.114    -.1003082    .0107187
+           2003  |  -.2652844    .030022    -8.84   0.000    -.3241483   -.2064205
+           2005  |  -.2667966   .0304078    -8.77   0.000    -.3264171   -.2071761
+           2007  |   -.314355   .0314969    -9.98   0.000    -.3761107   -.2525992
+           2008  |  -.3253615    .032323   -10.07   0.000    -.3887369    -.261986
+           2009  |  -.4262952   .0323823   -13.16   0.000    -.4897869   -.3628034
+           2011  |  -.3817134   .0320869   -11.90   0.000    -.4446261   -.3188007
+           2013  |  -.2675154   .0329884    -8.11   0.000    -.3321957   -.2028352
+           2015  |  -.1445327   .0348577    -4.15   0.000    -.2128779   -.0761875
+           2017  |   -.226516   .0364186    -6.22   0.000    -.2979218   -.1551103
+           2019  |  -.0610803   .0401046    -1.52   0.128    -.1397132    .0175526
+                 |
+           state |
+              2  |   .0327655   .1488271     0.22   0.826    -.2590391      .32457
+              3  |   .2076386   .1582033     1.31   0.189    -.1025498     .517827
+              4  |   .8408782   .5120454     1.64   0.101    -.1630863    1.844843
+              5  |   .1154197   .1637752     0.70   0.481    -.2056934    .4365327
+              6  |   .2006487    .177523     1.13   0.258    -.1474196     .548717
+              7  |  -.0406825   .1969927    -0.21   0.836    -.4269249    .3455599
+              8  |  -.0046372   .1705995    -0.03   0.978    -.3391307    .3298564
+              9  |   .0443957   .1699254     0.26   0.794    -.2887761    .3775676
+             10  |   .0094456   .2733433     0.03   0.972     -.526497    .5453883
+             11  |  -.1244519   .1714542    -0.73   0.468    -.4606212    .2117175
+             12  |  -.1667196   .2089979    -0.80   0.425    -.5765006    .2430614
+             13  |   -.084114   .2253904    -0.37   0.709    -.5260358    .3578077
+             14  |   .1032648   .1895519     0.54   0.586    -.2683885     .474918
+             15  |   .0662836   .1992259     0.33   0.739    -.3243374    .4569047
+             16  |  -.1374737   .2187401    -0.63   0.530    -.5663562    .2914088
+                 |
+           _cons |    6.44167   .5856222    11.00   0.000     5.293444    7.589896
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2687533
+         sigma_e |  1.1373873
+             rho |   .5544339   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R5
+N = 89135 ; Individuals = 18745 ; Within R2 =  0.092
+
+. 
+. run_attendance_spec, ///
+>     est(R6) ///
+>     rgvars("year female agefn qeduc2 state") ///
+>     mincell(10) ///
+>     gini ///
+>     fixsample(sample_R1)
+(1,567 real changes made)
+(8,277 missing values generated)
+(360,651 missing values generated)
+(355,721 real changes made)
+(4,930 missing values generated)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(41,490 real changes made)
+(47,634 real changes made)
+(41,497 real changes made)
+(47,638 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     89,135
+Group variable: pid                             Number of groups  =     18,745
+
+R-squared:                                      Obs per group:
+     Within  = 0.0924                                         min =          1
+     Between = 0.2120                                         avg =        4.8
+     Overall = 0.1778                                         max =         12
+
+                                                F(54, 3249)       =     108.29
+corr(u_i, Xb) = 0.1486                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 3,250 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1221879   .0194498     6.28   0.000     .0840527    .1603231
+         own_any |   .0477646   .0210517     2.27   0.023     .0064887    .0890406
+       ref_never |  -.1493374   .0566138    -2.64   0.008    -.2603397   -.0383351
+         ref_any |  -.0268807   .0541706    -0.50   0.620    -.1330926    .0793313
+                 |
+      any_attend |
+ Any attendance  |  -.4445188   .4116588    -1.08   0.280    -1.251656    .3626184
+        gini_tmp |  -.1318423   .1377477    -0.96   0.339    -.4019234    .1382388
+                 |
+         marital |
+              2  |  -.1049123   .0288783    -3.63   0.000    -.1615338   -.0482907
+              3  |  -.2081707   .0556717    -3.74   0.000    -.3173259   -.0990155
+              4  |   .0081781   .0416899     0.20   0.844    -.0735631    .0899193
+              5  |  -.3957173   .0482017    -8.21   0.000    -.4902261   -.3012084
+                 |
+            educ |  -.0500083   .0091223    -5.48   0.000    -.0678944   -.0321222
+           hsize |   .0155507    .009353     1.66   0.096    -.0027876     .033889
+           kid01 |   .2588582   .0271946     9.52   0.000      .205538    .3121784
+           kid24 |   .0107918   .0201475     0.54   0.592    -.0287112    .0502948
+           kid57 |   .0066477   .0180662     0.37   0.713    -.0287746    .0420699
+          kid810 |  -.0140502   .0171955    -0.82   0.414    -.0477653    .0196649
+         kid1112 |  -.0106206   .0192139    -0.55   0.580    -.0482931    .0270519
+         kid1315 |  -.0084317   .0160208    -0.53   0.599    -.0398436    .0229803
+         kid1618 |  -.0009748    .016562    -0.06   0.953    -.0334479    .0314983
+                 |
+       curhealth |
+              2  |   1.095804   .0428429    25.58   0.000     1.011803    1.179806
+              3  |   1.653042   .0434907    38.01   0.000      1.56777    1.738314
+              4  |   2.069287   .0443036    46.71   0.000     1.982421    2.156152
+              5  |    2.35122   .0467607    50.28   0.000     2.259537    2.442904
+                 |
+          nlabor |   .0145116   .0025196     5.76   0.000     .0095714    .0194518
+                 |
+          e11103 |
+  [2] Part Time  |   .0076084   .0168634     0.45   0.652    -.0254554    .0406723
+[3] Not Working  |   .0732572   .0254227     2.88   0.004      .023411    .1231034
+                 |
+           owner |  -.0162676   .0191568    -0.85   0.396    -.0538282    .0212931
+          lworkh |   .0604754   .0070942     8.52   0.000     .0465659    .0743849
+                 |
+            year |
+           2001  |  -.0449804   .0282505    -1.59   0.111    -.1003709    .0104102
+           2003  |  -.2603334    .030239    -8.61   0.000    -.3196229   -.2010439
+           2005  |  -.2625317   .0306928    -8.55   0.000    -.3227109   -.2023525
+           2007  |  -.3074009   .0319012    -9.64   0.000    -.3699495   -.2448524
+           2008  |   -.318403   .0327066    -9.74   0.000    -.3825307   -.2542753
+           2009  |  -.4211071   .0328703   -12.81   0.000    -.4855558   -.3566584
+           2011  |  -.3753305   .0324465   -11.57   0.000    -.4389482   -.3117128
+           2013  |  -.2626234   .0332408    -7.90   0.000    -.3277985   -.1974483
+           2015  |  -.1417328   .0349492    -4.06   0.000    -.2102574   -.0732081
+           2017  |  -.2242336   .0366556    -6.12   0.000     -.296104   -.1523632
+           2019  |  -.0595594   .0405664    -1.47   0.142    -.1390977     .019979
+                 |
+           state |
+              2  |    .040066   .1488342     0.27   0.788    -.2517524    .3318845
+              3  |   .2086483   .1582336     1.32   0.187    -.1015995     .518896
+              4  |   .8421284   .5119379     1.64   0.100    -.1616254    1.845882
+              5  |   .1213006   .1636964     0.74   0.459    -.1996581    .4422592
+              6  |    .204099     .17754     1.15   0.250    -.1440027    .5522008
+              7  |  -.0429959   .1969544    -0.22   0.827    -.4291633    .3431716
+              8  |  -.0044771   .1705584    -0.03   0.979      -.33889    .3299359
+              9  |   .0447893   .1699128     0.26   0.792    -.2883577    .3779364
+             10  |   -.000205    .273327    -0.00   0.999    -.5361157    .5357057
+             11  |  -.1186145   .1715924    -0.69   0.489    -.4550548    .2178259
+             12  |  -.1654494   .2089207    -0.79   0.428    -.5750791    .2441802
+             13  |  -.0872965   .2252572    -0.39   0.698     -.528957    .3543639
+             14  |   .1027275   .1894666     0.54   0.588    -.2687586    .4742136
+             15  |   .0652813   .1991967     0.33   0.743    -.3252825    .4558451
+             16  |  -.1366852   .2188491    -0.62   0.532    -.5657814    .2924111
+                 |
+           _cons |   6.369059   .5779136    11.02   0.000     5.235947    7.502171
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2692714
+         sigma_e |   1.137368
+             rho |  .55464398   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R6
+N = 89135 ; Individuals = 18745 ; Within R2 =  0.092
+
+. 
+. run_attendance_spec, ///
+>     est(R7) ///
+>     rgvars("year female agefn qeduc2 state") ///
+>     mincell(10) ///
+>     rank ///
+>     fixsample(sample_R1)
+(1,567 real changes made)
+(8,277 missing values generated)
+(360,651 missing values generated)
+(360,651 missing values generated)
+(355,721 real changes made)
+(355,721 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(0 real changes made)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(271,516 missing values generated)
+(41,490 real changes made)
+(47,634 real changes made)
+(40,723 real changes made)
+(47,126 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     89,135
+Group variable: pid                             Number of groups  =     18,745
+
+R-squared:                                      Obs per group:
+     Within  = 0.0923                                         min =          1
+     Between = 0.2164                                         avg =        4.8
+     Overall = 0.1808                                         max =         12
+
+                                                F(53, 3249)       =     110.61
+corr(u_i, Xb) = 0.1533                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 3,250 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .0542652   .0273831     1.98   0.048     .0005752    .1079551
+         own_any |    .035839   .0336062     1.07   0.286    -.0300524    .1017304
+       ref_never |   .1407436   .0488979     2.88   0.004     .0448698    .2366175
+         ref_any |   .0541858   .0532648     1.02   0.309    -.0502501    .1586218
+                 |
+      any_attend |
+ Any attendance  |    .274153   .3212445     0.85   0.393    -.3557092    .9040153
+                 |
+         marital |
+              2  |  -.1011493   .0288728    -3.50   0.000      -.15776   -.0445385
+              3  |  -.2070264   .0555346    -3.73   0.000    -.3159127     -.09814
+              4  |   .0083409    .041688     0.20   0.841    -.0733965    .0900783
+              5  |   -.394336   .0482364    -8.18   0.000    -.4889128   -.2997592
+                 |
+            educ |  -.0504619   .0090648    -5.57   0.000    -.0682353   -.0326885
+           hsize |   .0153262   .0093392     1.64   0.101     -.002985    .0336375
+           kid01 |   .2650474   .0272332     9.73   0.000     .2116515    .3184433
+           kid24 |   .0180375   .0202853     0.89   0.374    -.0217357    .0578107
+           kid57 |   .0116352   .0180805     0.64   0.520     -.023815    .0470855
+          kid810 |  -.0094172   .0171588    -0.55   0.583    -.0430603     .024226
+         kid1112 |  -.0062992   .0191618    -0.33   0.742    -.0438696    .0312712
+         kid1315 |  -.0047687   .0160549    -0.30   0.766    -.0362475    .0267101
+         kid1618 |   .0029481   .0165731     0.18   0.859    -.0295466    .0354429
+                 |
+       curhealth |
+              2  |   1.096326   .0428626    25.58   0.000     1.012286    1.180366
+              3  |    1.65343   .0435047    38.01   0.000     1.568131    1.738729
+              4  |   2.069586   .0443153    46.70   0.000     1.982697    2.156475
+              5  |   2.351675   .0467794    50.27   0.000     2.259954    2.443395
+                 |
+          nlabor |   .0140149   .0025258     5.55   0.000     .0090626    .0189672
+                 |
+          e11103 |
+  [2] Part Time  |   .0093781   .0168436     0.56   0.578    -.0236471    .0424033
+[3] Not Working  |   .0770492   .0253334     3.04   0.002     .0273782    .1267203
+                 |
+           owner |  -.0203939    .019115    -1.07   0.286    -.0578725    .0170847
+          lworkh |   .0599971   .0070978     8.45   0.000     .0460805    .0739137
+                 |
+            year |
+           2001  |  -.0478283    .028194    -1.70   0.090    -.1031082    .0074515
+           2003  |  -.2729642   .0292879    -9.32   0.000    -.3303887   -.2155396
+           2005  |  -.2751394   .0291702    -9.43   0.000    -.3323333   -.2179454
+           2007  |  -.3227842   .0304505   -10.60   0.000    -.3824883   -.2630801
+           2008  |  -.3345652   .0309703   -10.80   0.000    -.3952884   -.2738419
+           2009  |  -.4362291    .030883   -14.13   0.000    -.4967812   -.3756769
+           2011  |  -.3912746   .0308263   -12.69   0.000    -.4517157   -.3308336
+           2013  |   -.279409   .0312598    -8.94   0.000    -.3406999    -.218118
+           2015  |  -.1586318    .032423    -4.89   0.000    -.2222033   -.0950603
+           2017  |  -.2443031   .0328873    -7.43   0.000     -.308785   -.1798212
+           2019  |  -.0820162   .0355685    -2.31   0.021    -.1517551   -.0122773
+                 |
+           state |
+              2  |   .0334049   .1490686     0.22   0.823    -.2588731    .3256829
+              3  |   .2060654   .1585334     1.30   0.194      -.10477    .5169009
+              4  |   .8350129   .5160976     1.62   0.106    -.1768968    1.846923
+              5  |   .1134122   .1641434     0.69   0.490    -.2084229    .4352472
+              6  |   .1926925   .1780574     1.08   0.279    -.1564236    .5418086
+              7  |  -.0482925   .1970383    -0.25   0.806    -.4346244    .3380395
+              8  |  -.0130784   .1711361    -0.08   0.939    -.3486241    .3224672
+              9  |     .03851   .1704897     0.23   0.821    -.2957681    .3727881
+             10  |   .0015036    .273727     0.01   0.996    -.5351914    .5381986
+             11  |  -.1229855   .1715589    -0.72   0.474    -.4593601     .213389
+             12  |  -.1587828   .2090008    -0.76   0.447    -.5685694    .2510039
+             13  |  -.0773912   .2257986    -0.34   0.732    -.5201133    .3653309
+             14  |   .1074627   .1895178     0.57   0.571    -.2641238    .4790492
+             15  |   .0735924   .1991098     0.37   0.712    -.3168011    .4639859
+             16  |  -.1299118   .2187164    -0.59   0.553    -.5587479    .2989243
+                 |
+           _cons |   5.465929    .316251    17.28   0.000     4.845858    6.086001
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2665364
+         sigma_e |  1.1373945
+             rho |  .55356654   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R7
+N = 89135 ; Individuals = 18745 ; Within R2 =  0.092
+
+. 
+. run_attendance_spec, ///
+>     est(R8) ///
+>     rgvars("year female agefn qeduc2 state") ///
+>     mincell(10) ///
+>     consump ///
+>     savesample(sample_R8)
+(14,551 missing values generated)
+(14,551 missing values generated)
+(22,529 missing values generated)
+(360,651 missing values generated)
+(340,974 real changes made)
+(0 real changes made)
+(1,486 real changes made)
+(0 real changes made)
+(0 real changes made)
+(276,063 missing values generated)
+(276,063 missing values generated)
+(276,063 missing values generated)
+(276,063 missing values generated)
+(39,524 real changes made)
+(45,064 real changes made)
+(39,524 real changes made)
+(45,064 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     84,493
+Group variable: pid                             Number of groups  =     18,376
+
+R-squared:                                      Obs per group:
+     Within  = 0.0903                                         min =          1
+     Between = 0.1992                                         avg =        4.6
+     Overall = 0.1695                                         max =         12
+
+                                                F(53, 3220)       =     103.42
+corr(u_i, Xb) = 0.1347                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 3,221 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |    .072182   .0194397     3.71   0.000     .0340666    .1102975
+         own_any |  -.0005971     .02055    -0.03   0.977    -.0408894    .0396953
+       ref_never |  -.1536415   .0531691    -2.89   0.004    -.2578902   -.0493929
+         ref_any |  -.0424973   .0503349    -0.84   0.399    -.1411889    .0561943
+                 |
+      any_attend |
+ Any attendance  |  -.3428885   .4447639    -0.77   0.441    -1.214938    .5291605
+                 |
+         marital |
+              2  |  -.1089288   .0302143    -3.61   0.000      -.16817   -.0496876
+              3  |  -.2256331   .0565918    -3.99   0.000    -.3365927   -.1146736
+              4  |   .0136212    .043235     0.32   0.753    -.0711497    .0983921
+              5  |  -.3938504   .0492596    -8.00   0.000    -.4904337    -.297267
+                 |
+            educ |  -.0507166   .0095023    -5.34   0.000    -.0693476   -.0320855
+           hsize |   .0238615   .0094426     2.53   0.012     .0053475    .0423756
+           kid01 |   .2472702    .027629     8.95   0.000     .1930979    .3014424
+           kid24 |   .0000424   .0206447     0.00   0.998    -.0404358    .0405205
+           kid57 |   .0029013    .018548     0.16   0.876    -.0334658    .0392684
+          kid810 |  -.0185265   .0176368    -1.05   0.294     -.053107     .016054
+         kid1112 |  -.0199686   .0196686    -1.02   0.310     -.058533    .0185957
+         kid1315 |   -.011882   .0164259    -0.72   0.470    -.0440883    .0203243
+         kid1618 |  -.0095678   .0171045    -0.56   0.576    -.0431045     .023969
+                 |
+       curhealth |
+              2  |   1.077279    .043871    24.56   0.000     .9912611    1.163297
+              3  |   1.622667   .0445258    36.44   0.000     1.535366    1.709969
+              4  |   2.038362   .0454042    44.89   0.000     1.949338    2.127387
+              5  |   2.323758   .0480208    48.39   0.000     2.229603    2.417912
+                 |
+          nlabor |   .0166838   .0026607     6.27   0.000     .0114671    .0219006
+                 |
+          e11103 |
+  [2] Part Time  |  -.0059567   .0173549    -0.34   0.731    -.0399845     .028071
+[3] Not Working  |   .0586052   .0259688     2.26   0.024     .0076881    .1095223
+                 |
+           owner |  -.0188953   .0197476    -0.96   0.339    -.0576145    .0198239
+          lworkh |   .0623804   .0073792     8.45   0.000      .047912    .0768487
+                 |
+            year |
+           2001  |  -.0419686   .0287296    -1.46   0.144    -.0982988    .0143616
+           2003  |  -.2499363   .0307905    -8.12   0.000    -.3103074   -.1895653
+           2005  |  -.2682464   .0310884    -8.63   0.000    -.3292014   -.2072914
+           2007  |  -.3030888   .0327674    -9.25   0.000     -.367336   -.2388417
+           2008  |  -.3177288   .0334862    -9.49   0.000    -.3833852   -.2520724
+           2009  |   -.412478   .0335276   -12.30   0.000    -.4782157   -.3467404
+           2011  |  -.3613756   .0331901   -10.89   0.000    -.4264515   -.2962998
+           2013  |  -.2561549   .0339041    -7.56   0.000    -.3226307   -.1896792
+           2015  |  -.1217648   .0356744    -3.41   0.001    -.1917115    -.051818
+           2017  |  -.1986697   .0369515    -5.38   0.000    -.2711204   -.1262189
+           2019  |  -.0384686    .040242    -0.96   0.339    -.1173711     .040434
+                 |
+           state |
+              2  |   .0863205   .1566196     0.55   0.582    -.2207637    .3934047
+              3  |    .267826   .1675983     1.60   0.110    -.0607841    .5964361
+              4  |     .92445   .5154625     1.79   0.073    -.0862179    1.935118
+              5  |   .1757126   .1741104     1.01   0.313    -.1656659     .517091
+              6  |   .2476676   .1892111     1.31   0.191    -.1233188    .6186541
+              7  |  -.0525798   .2097997    -0.25   0.802    -.4639342    .3587746
+              8  |   .0529856   .1816526     0.29   0.771    -.3031809    .4091522
+              9  |   .0847612   .1801234     0.47   0.638    -.2684068    .4379293
+             10  |  -.1025004   .2962809    -0.35   0.729    -.6834187    .4784179
+             11  |  -.0067615    .183094    -0.04   0.971    -.3657542    .3522312
+             12  |   -.180243   .2192678    -0.82   0.411    -.6101617    .2496756
+             13  |  -.0951653   .2295795    -0.41   0.679    -.5453021    .3549715
+             14  |   .1511827   .1978682     0.76   0.445    -.2367776    .5391431
+             15  |   .1092354   .2062561     0.53   0.596    -.2951712    .5136419
+             16  |  -.0786744   .2275001    -0.35   0.729    -.5247342    .3673854
+                 |
+           _cons |   6.817372   .5622219    12.13   0.000     5.715023    7.919721
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2891587
+         sigma_e |  1.1380171
+             rho |     .56203   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R8
+N = 84493 ; Individuals = 18376 ; Within R2 =  0.090
+
+. 
+. run_attendance_spec, ///
+>     est(R9) ///
+>     rgvars("year female agefn qeduc2 state") ///
+>     mincell(25) ///
+>     fixsample(sample_R1)
+(1,567 real changes made)
+(8,277 missing values generated)
+(360,651 missing values generated)
+(333,184 real changes made)
+(0 real changes made)
+(5,537 real changes made)
+(0 real changes made)
+(0 real changes made)
+(277,053 missing values generated)
+(277,053 missing values generated)
+(277,053 missing values generated)
+(277,053 missing values generated)
+(38,532 real changes made)
+(45,058 real changes made)
+(38,538 real changes made)
+(45,060 real changes made)
+
+Panel variable: pid (unbalanced)
+ Time variable: year, 1999 to 2019, but with gaps
+         Delta: 1 unit
+
+Fixed-effects (within) regression               Number of obs     =     83,598
+Group variable: pid                             Number of groups  =     17,936
+
+R-squared:                                      Obs per group:
+     Within  = 0.0919                                         min =          1
+     Between = 0.2187                                         avg =        4.7
+     Overall = 0.1837                                         max =         12
+
+                                                F(52, 2482)       =     105.66
+corr(u_i, Xb) = 0.1581                          Prob > F          =     0.0000
+
+                                 (Std. err. adjusted for 2,483 clusters in rg_tmp)
+----------------------------------------------------------------------------------
+                 |               Robust
+           happy | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-----------------+----------------------------------------------------------------
+       own_never |   .1290309   .0199102     6.48   0.000     .0899885    .1680732
+         own_any |   .0596751   .0189911     3.14   0.002     .0224351     .096915
+       ref_never |  -.1596553    .055426    -2.88   0.004    -.2683413   -.0509693
+         ref_any |  -.0416922   .0506137    -0.82   0.410    -.1409416    .0575571
+                 |
+      any_attend |
+ Any attendance  |  -.4527524   .4276487    -1.06   0.290    -1.291337    .3858325
+                 |
+         marital |
+              2  |  -.1033461   .0305949    -3.38   0.001    -.1633402    -.043352
+              3  |  -.1943751   .0575086    -3.38   0.001    -.3071449   -.0816053
+              4  |  -.0089057   .0428069    -0.21   0.835    -.0928466    .0750352
+              5  |  -.3972683   .0496633    -8.00   0.000    -.4946541   -.2998824
+                 |
+            educ |  -.0429428   .0095185    -4.51   0.000    -.0616078   -.0242779
+           hsize |   .0192819   .0097177     1.98   0.047     .0002262    .0383375
+           kid01 |   .2565595   .0284271     9.03   0.000     .2008162    .3123027
+           kid24 |   .0103613   .0210498     0.49   0.623    -.0309156    .0516383
+           kid57 |   .0027243   .0185387     0.15   0.883    -.0336285    .0390772
+          kid810 |  -.0214807   .0175899    -1.22   0.222     -.055973    .0130116
+         kid1112 |  -.0142488   .0197811    -0.72   0.471     -.053038    .0245403
+         kid1315 |  -.0074512   .0165778    -0.45   0.653     -.039959    .0250567
+         kid1618 |  -.0007513   .0171755    -0.04   0.965    -.0344312    .0329285
+                 |
+       curhealth |
+              2  |   1.099062   .0441307    24.90   0.000     1.012525    1.185599
+              3  |   1.663091   .0447354    37.18   0.000     1.575368    1.750813
+              4  |   2.073732   .0455028    45.57   0.000     1.984504    2.162959
+              5  |   2.349086   .0480569    48.88   0.000     2.254851    2.443322
+                 |
+          nlabor |   .0150987   .0025954     5.82   0.000     .0100093    .0201881
+                 |
+          e11103 |
+  [2] Part Time  |   .0014191   .0175781     0.08   0.936    -.0330501    .0358883
+[3] Not Working  |   .0662591   .0264714     2.50   0.012     .0143508    .1181675
+                 |
+           owner |  -.0110979   .0198572    -0.56   0.576    -.0500362    .0278404
+          lworkh |   .0567976   .0074591     7.61   0.000     .0421708    .0714244
+                 |
+            year |
+           2001  |  -.0529031   .0298674    -1.77   0.077    -.1114708    .0056645
+           2003  |  -.2648456    .031885    -8.31   0.000    -.3273694   -.2023218
+           2005  |  -.2757704   .0324339    -8.50   0.000    -.3393706   -.2121701
+           2007  |  -.3123656   .0337809    -9.25   0.000    -.3786072    -.246124
+           2008  |   -.321171   .0345849    -9.29   0.000    -.3889892   -.2533528
+           2009  |  -.4289178   .0347328   -12.35   0.000     -.497026   -.3608096
+           2011  |  -.3868108   .0342287   -11.30   0.000    -.4539305   -.3196911
+           2013  |   -.266374   .0350866    -7.59   0.000     -.335176    -.197572
+           2015  |  -.1485739   .0367896    -4.04   0.000    -.2207154   -.0764325
+           2017  |  -.2297022   .0385244    -5.96   0.000    -.3052455   -.1541589
+           2019  |  -.0614184   .0421512    -1.46   0.145    -.1440735    .0212367
+                 |
+           state |
+              2  |   .8762525   .4836999     1.81   0.070    -.0722444    1.824749
+              3  |   .2518642   .2621558     0.96   0.337    -.2622023    .7659308
+              5  |    .216614   .2649183     0.82   0.414    -.3028698    .7360977
+              6  |   .2862146   .2601822     1.10   0.271    -.2239819    .7964111
+              7  |  -.1028487   .3031168    -0.34   0.734    -.6972366    .4915391
+              8  |   .0433846   .2660799     0.16   0.870    -.4783769    .5651461
+              9  |   .1328716   .2660303     0.50   0.617    -.3887927    .6545358
+             10  |   .0654092    .410243     0.16   0.873    -.7390446    .8698629
+             11  |  -.0075944   .2735211    -0.03   0.978    -.5439474    .5287587
+             12  |   .0234882    .304606     0.08   0.939    -.5738199    .6207962
+             13  |  -.2652014   .3876438    -0.68   0.494     -1.02534    .4949372
+             14  |   .1471708   .2800736     0.53   0.599    -.4020313    .6963729
+             15  |   .1602882   .2887714     0.56   0.579    -.4059695    .7265459
+             16  |  -.0729258   .3094781    -0.24   0.814    -.6797877    .5339362
+                 |
+           _cons |   6.204088   .6131025    10.12   0.000     5.001843    7.406333
+-----------------+----------------------------------------------------------------
+         sigma_u |  1.2681635
+         sigma_e |  1.1378482
+             rho |  .55400396   (fraction of variance due to u_i)
+----------------------------------------------------------------------------------
+ 
+Specification R9
+N = 83598 ; Individuals = 17936 ; Within R2 =  0.092
+
+. 
+. 
+. * ============================================================
+. * Consumption sample: annual coverage and estimation samples
+. * ============================================================
+. di as text "Baseline attendance sample by survey year"
+Baseline attendance sample by survey year
+
+. tab year if sample_R1 == 1
+
+                            Survey Year |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                   1999 |      2,427        2.72        2.72
+                                   2001 |      8,045        9.03       11.75
+                                   2003 |      8,718        9.78       21.53
+                                   2005 |      8,056        9.04       30.57
+                                   2007 |      8,638        9.69       40.26
+                                   2008 |      8,151        9.14       49.40
+                                   2009 |      7,551        8.47       57.87
+                                   2011 |      8,212        9.21       67.09
+                                   2013 |      8,861        9.94       77.03
+                                   2015 |      7,858        8.82       85.84
+                                   2017 |      6,856        7.69       93.54
+                                   2019 |      5,762        6.46      100.00
+----------------------------------------+-----------------------------------
+                                  Total |     89,135      100.00
+
+. di as text "Savings classification within baseline estimation sample"
+Savings classification within baseline estimation sample
+
+. tab saving_source if sample_R1 == 1, missing
+
+                          saving_source |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+           Reported nonnegative savings |     59,440       66.69       66.69
+Confirmed zero, amount not applicable/m |     25,270       28.35       95.04
+             Unresolved missing savings |      4,425        4.96      100.00
+----------------------------------------+-----------------------------------
+                                  Total |     89,135      100.00
+
+. tab year saving_source if sample_R1 == 1, missing
+
+                      |          saving_source
+          Survey Year | Reported   Confirmed  Unresolve |     Total
+----------------------+---------------------------------+----------
+                 1999 |     1,512        751        164 |     2,427 
+                 2001 |     5,213      2,267        565 |     8,045 
+                 2003 |     5,586      2,543        589 |     8,718 
+                 2005 |     5,322      2,249        485 |     8,056 
+                 2007 |     5,612      2,570        456 |     8,638 
+                 2008 |     5,281      2,404        466 |     8,151 
+                 2009 |     4,920      2,266        365 |     7,551 
+                 2011 |     5,458      2,420        334 |     8,212 
+                 2013 |     6,072      2,513        276 |     8,861 
+                 2015 |     5,415      2,175        268 |     7,858 
+                 2017 |     4,781      1,841        234 |     6,856 
+                 2019 |     4,268      1,271        223 |     5,762 
+----------------------+---------------------------------+----------
+                Total |    59,440     25,270      4,425 |    89,135 
+
+. di as text "Reported savings by survey year within baseline"
+Reported savings by survey year within baseline
+
+. tab year if sample_R1 == 1 & saving_source == 1
+
+                            Survey Year |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                   1999 |      1,512        2.54        2.54
+                                   2001 |      5,213        8.77       11.31
+                                   2003 |      5,586        9.40       20.71
+                                   2005 |      5,322        8.95       29.67
+                                   2007 |      5,612        9.44       39.11
+                                   2008 |      5,281        8.88       47.99
+                                   2009 |      4,920        8.28       56.27
+                                   2011 |      5,458        9.18       65.45
+                                   2013 |      6,072       10.22       75.67
+                                   2015 |      5,415        9.11       84.78
+                                   2017 |      4,781        8.04       92.82
+                                   2019 |      4,268        7.18      100.00
+----------------------------------------+-----------------------------------
+                                  Total |     59,440      100.00
+
+. di as text "Verified zero saving by survey year within baseline"
+Verified zero saving by survey year within baseline
+
+. tab year if sample_R1 == 1 & saving_source == 2
+
+                            Survey Year |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                   1999 |        751        2.97        2.97
+                                   2001 |      2,267        8.97       11.94
+                                   2003 |      2,543       10.06       22.01
+                                   2005 |      2,249        8.90       30.91
+                                   2007 |      2,570       10.17       41.08
+                                   2008 |      2,404        9.51       50.59
+                                   2009 |      2,266        8.97       59.56
+                                   2011 |      2,420        9.58       69.13
+                                   2013 |      2,513        9.94       79.08
+                                   2015 |      2,175        8.61       87.69
+                                   2017 |      1,841        7.29       94.97
+                                   2019 |      1,271        5.03      100.00
+----------------------------------------+-----------------------------------
+                                  Total |     25,270      100.00
+
+. di as text "Consumption regression sample by survey year"
+Consumption regression sample by survey year
+
+. tab year if sample_R8 == 1
+
+                            Survey Year |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                                   1999 |      2,257        2.67        2.67
+                                   2001 |      7,460        8.83       11.50
+                                   2003 |      8,112        9.60       21.10
+                                   2005 |      7,558        8.95       30.05
+                                   2007 |      8,162        9.66       39.71
+                                   2008 |      7,646        9.05       48.76
+                                   2009 |      7,165        8.48       57.24
+                                   2011 |      7,867        9.31       66.55
+                                   2013 |      8,573       10.15       76.69
+                                   2015 |      7,569        8.96       85.65
+                                   2017 |      6,598        7.81       93.46
+                                   2019 |      5,526        6.54      100.00
+----------------------------------------+-----------------------------------
+                                  Total |     84,493      100.00
+
+. 
+. di as text "Baseline sample"
+Baseline sample
+
+. count if sample_R1 == 1
+  89,135
+
+. di as text "Baseline: original valid savings amount"
+Baseline: original valid savings amount
+
+. count if sample_R1 == 1 & saving_source == 1
+  59,440
+
+. di as text "Baseline: verified zeros recovered"
+Baseline: verified zeros recovered
+
+. count if sample_R1 == 1 & saving_source == 2
+  25,270
+
+. di as text "Baseline: unresolved missing savings"
+Baseline: unresolved missing savings
+
+. count if sample_R1 == 1 & saving_source == 3
+  4,425
+
+. di as text "Baseline: conflicting responses"
+Baseline: conflicting responses
+
+. count if sample_R1 == 1 & saving_source == 4
+  0
+
+. di as text "Baseline: valid calculated consumption"
+Baseline: valid calculated consumption
+
+. count if sample_R1 == 1 & !missing(lcons_eq_m)
+  84,603
+
+. di as text "Baseline: in consumption regression"
+Baseline: in consumption regression
+
+. count if sample_R1 == 1 & sample_R8 == 1
+  84,493
+
+. di as text "Baseline: valid consumption but excluded from consumption regression"
+Baseline: valid consumption but excluded from consumption regression
+
+. count if sample_R1 == 1 & sample_R8 != 1 & !missing(lcons_eq_m)
+  110
+
+. di as text "Consumption regression observations outside baseline"
+Consumption regression observations outside baseline
+
+. count if sample_R1 != 1 & sample_R8 == 1
+  0
+
+. 
+. * ============================================================
+. * 9. Helper programs
+. * ============================================================
+. 
+. capture program drop make_coef_from_est
+
+. program define make_coef_from_est, rclass
+  1.     version 17
+  2.     syntax, EST(name) VAR(name)
+  3. 
+.     estimates restore `est'
+  4. 
+.     tempname b se t p
+  5. 
+.     capture scalar `b' = _b[`var']
+  6.     if _rc {
+  7.         return local bcell ""
+  8.         return local secell ""
+  9.         exit
+ 10.     }
+ 11. 
+.     scalar `se' = _se[`var']
+ 12.     scalar `t'  = `b' / `se'
+ 13.     scalar `p'  = 2 * ttail(e(df_r), abs(`t'))
+ 14. 
+.     if missing(`p') {
+ 15.         scalar `p' = 2 * normal(-abs(`t'))
+ 16.     }
+ 17. 
+.     local stars ""
+ 18.     if (`p' < 0.01) {
+ 19.         local stars "***"
+ 20.     }
+ 21.     else if (`p' < 0.05) {
+ 22.         local stars "**"
+ 23.     }
+ 24.     else if (`p' < 0.10) {
+ 25.         local stars "*"
+ 26.     }
+ 27. 
+.     local bstr : display %9.3f `b'
+ 28.     local sestr : display %9.3f `se'
+ 29. 
+.     local bstr = strtrim("`bstr'")
+ 30.     local sestr = strtrim("`sestr'")
+ 31. 
+.     return local bcell "`bstr'`stars'"
+ 32.     return local secell "(`sestr')"
+ 33. end
+
+. 
+. 
+. capture program drop make_p_from_est
+
+. program define make_p_from_est, rclass
+  1.     version 17
+  2.     syntax, EST(name) TEST(string)
+  3. 
+.     estimates restore `est'
+  4. 
+.     capture quietly test `test'
+  5.     if _rc {
+  6.         return local pcell ""
+  7.         exit
+  8.     }
+  9. 
+.     local pstr : display %9.3f r(p)
+ 10.     local pstr = strtrim("`pstr'")
+ 11. 
+.     return local pcell "`pstr'"
+ 12. end
+
+. 
+. 
+. capture program drop make_stat_from_est
+
+. program define make_stat_from_est, rclass
+  1.     version 17
+  2.     syntax, EST(name) STAT(string)
+  3. 
+.     estimates restore `est'
+  4. 
+.     if "`stat'" == "N" {
+  5.         local v : display %12.0fc e(N)
+  6.     }
+  7.     else if "`stat'" == "N_g" {
+  8.         local v : display %12.0fc e(N_g)
+  9.     }
+ 10.     else if "`stat'" == "r2_w" {
+ 11.         local v : display %9.3f e(r2_w)
+ 12.     }
+ 13. 
+.     local v = strtrim("`v'")
+ 14.     return local value "`v'"
+ 15. end
+
+. 
+. 
+. * ============================================================
+. * 10. Collect table entries
+. * ============================================================
+. 
+. foreach m in R1 R2 R3 R4 R5 R6 R7 R8 R9 {
+  2. 
+.     quietly make_coef_from_est, est(`m') var(own_never)
+  3.     local c_own_never_`m' "`r(bcell)'"
+  4.     local s_own_never_`m' "`r(secell)'"
+  5. 
+.     quietly make_coef_from_est, est(`m') var(own_any)
+  6.     local c_own_any_`m' "`r(bcell)'"
+  7.     local s_own_any_`m' "`r(secell)'"
+  8. 
+.     quietly make_coef_from_est, est(`m') var(ref_never)
+  9.     local c_ref_never_`m' "`r(bcell)'"
+ 10.     local s_ref_never_`m' "`r(secell)'"
+ 11. 
+.     quietly make_coef_from_est, est(`m') var(ref_any)
+ 12.     local c_ref_any_`m' "`r(bcell)'"
+ 13.     local s_ref_any_`m' "`r(secell)'"
+ 14. 
+.     quietly make_p_from_est, est(`m') test("own_never = own_any")
+ 15.     local p_own_`m' "`r(pcell)'"
+ 16. 
+.     quietly make_p_from_est, est(`m') test("ref_never = ref_any")
+ 17.     local p_ref_`m' "`r(pcell)'"
+ 18. 
+.     quietly make_stat_from_est, est(`m') stat(N)
+ 19.     local n_`m' "`r(value)'"
+ 20. 
+.     quietly make_stat_from_est, est(`m') stat(N_g)
+ 21.     local id_`m' "`r(value)'"
+ 22. 
+.     quietly make_stat_from_est, est(`m') stat(r2_w)
+ 23.     local r2_`m' "`r(value)'"
+ 24. }
+
+. 
+. 
+. * ============================================================
+. * 11. Write LaTeX table
+. * ============================================================
+. 
+. local texfile "$OUTDIR/table_robustness_attendance_income_gradients.tex"
+
+. 
+. capture file close fh
+
+. file open fh using "`texfile'", write replace
+(file /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4.
+    Results/table_robustness_attendance_income_gradients.tex not found)
+
+. 
+. file write fh "\begin{table}[!t]" _n
+
+. file write fh "\centering" _n
+
+. file write fh "\caption{Robustness Checks: Church Attendance and Income Gradients}" _n
+
+. file write fh "\label{tab:robustness_attendance_income_gradients}" _n
+
+. file write fh "\begingroup" _n
+
+. file write fh "\scriptsize" _n
+
+. file write fh "\setlength{\tabcolsep}{3.5pt}" _n
+
+. file write fh "\renewcommand{\arraystretch}{1.12}" _n
+
+. file write fh "\begin{adjustbox}{max width=1.00\textwidth,center}" _n
+
+. file write fh "\begin{tabular}{lccccccccc}" _n
+
+. file write fh "\toprule" _n
+
+. file write fh " & (1) & (2) & (3) & (4) & (5) & (6) & (7) & (8) & (9) \\" _n
+
+. file write fh "\cmidrule(lr){2-10}" _n
+
+. file write fh " & Base & No educ. & Married & Denom. & Median & Gini & Rank & Consumption & Cell 25 \\
+> " _n
+
+. file write fh "\midrule" _n
+
+. 
+. file write fh "Own income/consumption, never & `c_own_never_R1' & `c_own_never_R2' & `c_own_never_R3' 
+> & `c_own_never_R4' & `c_own_never_R5' & `c_own_never_R6' & `c_own_never_R7' & `c_own_never_R8' & `c_ow
+> n_never_R9' \\" _n
+
+. file write fh " & `s_own_never_R1' & `s_own_never_R2' & `s_own_never_R3' & `s_own_never_R4' & `s_own_n
+> ever_R5' & `s_own_never_R6' & `s_own_never_R7' & `s_own_never_R8' & `s_own_never_R9' \\" _n
+
+. 
+. file write fh "Own income/consumption, any attendance & `c_own_any_R1' & `c_own_any_R2' & `c_own_any_R
+> 3' & `c_own_any_R4' & `c_own_any_R5' & `c_own_any_R6' & `c_own_any_R7' & `c_own_any_R8' & `c_own_any_R
+> 9' \\" _n
+
+. file write fh " & `s_own_any_R1' & `s_own_any_R2' & `s_own_any_R3' & `s_own_any_R4' & `s_own_any_R5' &
+>  `s_own_any_R6' & `s_own_any_R7' & `s_own_any_R8' & `s_own_any_R9' \\" _n
+
+. 
+. file write fh "\(p\)-value: never = any & `p_own_R1' & `p_own_R2' & `p_own_R3' & `p_own_R4' & `p_own_R
+> 5' & `p_own_R6' & `p_own_R7' & `p_own_R8' & `p_own_R9' \\" _n
+
+. 
+. file write fh "\addlinespace[0.25em]" _n
+
+. 
+. file write fh "Reference income/position/consumption, never & `c_ref_never_R1' & `c_ref_never_R2' & `c
+> _ref_never_R3' & `c_ref_never_R4' & `c_ref_never_R5' & `c_ref_never_R6' & `c_ref_never_R7' & `c_ref_ne
+> ver_R8' & `c_ref_never_R9' \\" _n
+
+. file write fh " & `s_ref_never_R1' & `s_ref_never_R2' & `s_ref_never_R3' & `s_ref_never_R4' & `s_ref_n
+> ever_R5' & `s_ref_never_R6' & `s_ref_never_R7' & `s_ref_never_R8' & `s_ref_never_R9' \\" _n
+
+. 
+. file write fh "Reference income/position/consumption, any attendance & `c_ref_any_R1' & `c_ref_any_R2'
+>  & `c_ref_any_R3' & `c_ref_any_R4' & `c_ref_any_R5' & `c_ref_any_R6' & `c_ref_any_R7' & `c_ref_any_R8'
+>  & `c_ref_any_R9' \\" _n
+
+. file write fh " & `s_ref_any_R1' & `s_ref_any_R2' & `s_ref_any_R3' & `s_ref_any_R4' & `s_ref_any_R5' &
+>  `s_ref_any_R6' & `s_ref_any_R7' & `s_ref_any_R8' & `s_ref_any_R9' \\" _n
+
+. 
+. file write fh "\(p\)-value: never = any & `p_ref_R1' & `p_ref_R2' & `p_ref_R3' & `p_ref_R4' & `p_ref_R
+> 5' & `p_ref_R6' & `p_ref_R7' & `p_ref_R8' & `p_ref_R9' \\" _n
+
+. 
+. file write fh "\midrule" _n
+
+. file write fh "Observations & `n_R1' & `n_R2' & `n_R3' & `n_R4' & `n_R5' & `n_R6' & `n_R7' & `n_R8' & 
+> `n_R9' \\" _n
+
+. file write fh "Individuals & `id_R1' & `id_R2' & `id_R3' & `id_R4' & `id_R5' & `id_R6' & `id_R7' & `id
+> _R8' & `id_R9' \\" _n
+
+. file write fh "Within \(R^2\) & `r2_R1' & `r2_R2' & `r2_R3' & `r2_R4' & `r2_R5' & `r2_R6' & `r2_R7' & 
+> `r2_R8' & `r2_R9' \\" _n
+
+. 
+. file write fh "\bottomrule" _n
+
+. file write fh "\end{tabular}" _n
+
+. file write fh "\end{adjustbox}" _n
+
+. 
+. file write fh "\vspace{0.45em}" _n
+
+. file write fh "\begin{minipage}{1.00\textwidth}" _n
+
+. file write fh "\footnotesize" _n
+
+. file write fh "\emph{Notes:} Standard errors clustered at the reference-group-year level are in parent
+> heses. Columns (1)--(3) and (5)--(7) are estimated on the baseline attendance-sample estimation sample
+> . Column (4) adds parental denomination to the reference-group definition within the Catholic/Protesta
+> nt interaction sample and applies the minimum cell size of 10. Column (8) uses the consumption proxy a
+> nd is estimated on its available sample; amounts are set to zero only for explicit no-saving responses
+>  with an inapplicable or missing amount, while other invalid values remain missing. Column (9) uses th
+> e baseline reference-group definition but requires a minimum reference-group-year cell size of 25. Any
+>  attendance equals one for individuals who attend religious services less often, at least monthly, or 
+> at least weekly. Own income is log equivalised household income, except in column (8), which uses log(
+> 1+equivalised consumption), computed from household income less reported annual savings. Reference inc
+> ome is the log leave-one-out mean income of the reference group, except in column (5), which uses log 
+> median reference income, column (7), which uses relative income rank, and column (8), which uses log l
+> eave-one-out mean equivalised consumption. The baseline reference group is defined by year, gender, ag
+> e group, two education groups, and federal state. Column (2) removes education from the reference-grou
+> p definition; column (3) replaces education with a married/non-married indicator; column (6) controls 
+> for reference-group-year inequality using the Gini coefficient. All models include individual, year, a
+> nd state fixed effects and baseline controls including working hours. * \(p<0.10\), ** \(p<0.05\), ***
+>  \(p<0.01\)." _n
+
+. file write fh "\end{minipage}" _n
+
+. file write fh "\endgroup" _n
+
+. file write fh "\end{table}" _n
+
+. 
+. file close fh
+
+. 
+. log close table2
+      name:  table2
+       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table2_estimation.log
+  log type:  text
+ closed on:  23 Oct 2026, 02:53:14
+--------------------------------------------------------------------------------------------------------
