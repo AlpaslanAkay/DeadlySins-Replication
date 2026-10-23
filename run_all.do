@@ -6,7 +6,7 @@ set more off
 set type double
 capture log close _all
 
-global SOEP_DIR "/Users/xakaal/Dropbox/Data/SOEP_v40/SOEP_v40/soepdata"
+global SOEP_DIR "/path/to/licensed/SOEP/soepdata"
 global ROOT "`c(pwd)'"
 global OUTDIR "$ROOT/output"
 

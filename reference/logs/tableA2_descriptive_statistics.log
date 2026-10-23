@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------------------------------
       name:  tableA2
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/tableA2_descriptive_st
+       log:  <OUTPUT_DIR>/tableA2_descriptive_st
 > atistics.log
   log type:  text
  opened on:  23 Oct 2026, 02:53:15
@@ -517,7 +517,7 @@ Baseline regression sample individuals: 18745
 . capture file close fh
 
 . file open fh using "`texfile'", write replace
-(file /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4.
+(file <OUTPUT_DIR>
     Results/appendix_table_A1_descriptive_statistics.tex not found)
 
 . 
@@ -670,12 +670,12 @@ Done.
 Appendix descriptive statistics saved to:
 
 . di as text "`texfile'"
-/Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/appendix_table_A1_descriptive_stati
+<OUTPUT_DIR>/appendix_table_A1_descriptive_stati
 > stics.tex
 
 . log close tableA2
       name:  tableA2
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/tableA2_descriptive_st
+       log:  <OUTPUT_DIR>/tableA2_descriptive_st
 > atistics.log
   log type:  text
  closed on:  23 Oct 2026, 02:53:30

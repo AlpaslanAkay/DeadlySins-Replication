@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------------------------------
       name:  table1
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table1_estimation.log
+       log:  <OUTPUT_DIR>/table1_estimation.log
   log type:  text
  opened on:  23 Oct 2026, 02:51:18
 
@@ -1414,7 +1414,7 @@ Model 3: Attendance x Denomination
 . capture file close fh
 
 . file open fh using "`texfile'", write replace
-(file /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4.
+(file <OUTPUT_DIR>
     Results/table_income_gradients_attendance_denomination_interaction.tex not found)
 
 . 
@@ -1543,7 +1543,7 @@ Model 3: Attendance x Denomination
 . 
 . log close table1
       name:  table1
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table1_estimation.log
+       log:  <OUTPUT_DIR>/table1_estimation.log
   log type:  text
  closed on:  23 Oct 2026, 02:51:52
 --------------------------------------------------------------------------------------------------------

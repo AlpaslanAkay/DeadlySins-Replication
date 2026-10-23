@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------------------------------
       name:  table2
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table2_estimation.log
+       log:  <OUTPUT_DIR>/table2_estimation.log
   log type:  text
  opened on:  23 Oct 2026, 02:51:52
 
@@ -1963,7 +1963,7 @@ Consumption regression observations outside baseline
 . capture file close fh
 
 . file open fh using "`texfile'", write replace
-(file /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4.
+(file <OUTPUT_DIR>
     Results/table_robustness_attendance_income_gradients.tex not found)
 
 . 
@@ -2098,7 +2098,7 @@ Consumption regression observations outside baseline
 . 
 . log close table2
       name:  table2
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/table2_estimation.log
+       log:  <OUTPUT_DIR>/table2_estimation.log
   log type:  text
  closed on:  23 Oct 2026, 02:53:14
 --------------------------------------------------------------------------------------------------------

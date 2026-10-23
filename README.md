@@ -9,7 +9,7 @@ Access to the licensed SOEP-Core v40.1 (EU Edition) Stata data files `pl.dta`, `
 
 ## Run
 
-1. Extract this archive, and in Stata set the working directory to the extracted package directory (`cd "/path/to/DeadlySins_Replication_Final"`).
+1. Clone or download this repository, and in Stata set the working directory to the repository folder (`cd "/path/to/DeadlySins-Replication"`).
 2. In `run_all.do`, set `SOEP_DIR` to the folder containing the licensed SOEP `.dta` files.
 3. Execute `do run_all.do` in Stata 17.
 
@@ -40,3 +40,5 @@ Appendix A.1 counts refer to the **prepared source panel (1984–2023)**, before
 ## Data access
 
 The raw SOEP files and locally constructed intermediate data are restricted by the SOEP licence and are not included. Researchers must obtain access to SOEP-Core v40.1 (EU Edition) from the data provider. The programs use individual fixed-effects regressions with standard errors clustered at the reference-group-year level. Tables are written as self-contained `.tex` tabular environments; the manuscript presents Tables 1 and 2 sideways.
+
+The archived reference logs have generic folder paths in place of local computer paths; the numerical results are unchanged.

@@ -1,11 +1,11 @@
 --------------------------------------------------------------------------------------------------------
       name:  dataprep
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/data_preparation.log
+       log:  <OUTPUT_DIR>/data_preparation.log
   log type:  text
  opened on:  23 Oct 2026, 02:50:38
 
 . 
-. use "/Users/xakaal/Dropbox/Papers/ZData/Offshore/soep_2023.dta", clear
+. use "<ANALYSIS_DATA_DIR>/soep_2023.dta", clear
 
 . 
 . * Savings filter variables already included in the combined SOEP file.
@@ -45,7 +45,7 @@ Main data observations before BIOPAREN merge: 1174812
 . preserve
 
 . 
-.     use "/Users/xakaal/Dropbox/Data/SOEP_v40/SOEP_v40/soepdata/bioparen.dta", clear
+.     use "<SOEP_DIR>/bioparen.dta", clear
 (SOEP-Core, v40.1 (EU Edition), doi:10.5684/soep.core.v40.1eu)
 
 . 
@@ -75,8 +75,8 @@ Duplicates in terms of persnr
 .     tempfile bioparen_religion
 
 .     save `bioparen_religion', replace
-(file /var/folders/0x/1rdb_d_53nn0mhl1x9wq61gr0000gn/T//S_33976.000002 not found)
-file /var/folders/0x/1rdb_d_53nn0mhl1x9wq61gr0000gn/T//S_33976.000002 saved as .dta format
+(file <TEMP_DIR>/S_33976.000002 not found)
+file <TEMP_DIR>/S_33976.000002 saved as .dta format
 
 . 
 . restore
@@ -914,7 +914,7 @@ Both parents no denom |    26,039        552 |    26,591
 . 
 . log close dataprep
       name:  dataprep
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/data_preparation.log
+       log:  <OUTPUT_DIR>/data_preparation.log
   log type:  text
  closed on:  23 Oct 2026, 02:51:18
 --------------------------------------------------------------------------------------------------------

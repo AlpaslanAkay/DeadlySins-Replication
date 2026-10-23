@@ -1,6 +1,6 @@
 --------------------------------------------------------------------------------------------------------
       name:  tableA1
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/tableA1_sample_composi
+       log:  <OUTPUT_DIR>/tableA1_sample_composi
 > tion.log
   log type:  text
  opened on:  23 Oct 2026, 02:53:14
@@ -172,8 +172,8 @@ P Top Shareholder Sam |     7,163          0 |     7,163
 . tempfile sample_counts
 
 . save `sample_counts', replace
-(file /var/folders/0x/1rdb_d_53nn0mhl1x9wq61gr0000gn/T//S_33976.000006 not found)
-file /var/folders/0x/1rdb_d_53nn0mhl1x9wq61gr0000gn/T//S_33976.000006 saved as .dta format
+(file <TEMP_DIR>/S_33976.000006 not found)
+file <TEMP_DIR>/S_33976.000006 saved as .dta format
 
 . 
 . 
@@ -187,7 +187,7 @@ file /var/folders/0x/1rdb_d_53nn0mhl1x9wq61gr0000gn/T//S_33976.000006 saved as .
 . capture file close fh
 
 . file open fh using "`texfile'", write replace
-(file /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4.
+(file <OUTPUT_DIR>
     Results/appendix_table_soep_sample_composition.tex not found)
 
 . 
@@ -384,7 +384,7 @@ Done.
 
 . log close tableA1
       name:  tableA1
-       log:  /Users/xakaal/Dropbox/Papers/Religion and Relative Income/4. Results/tableA1_sample_composi
+       log:  <OUTPUT_DIR>/tableA1_sample_composi
 > tion.log
   log type:  text
  closed on:  23 Oct 2026, 02:53:15
